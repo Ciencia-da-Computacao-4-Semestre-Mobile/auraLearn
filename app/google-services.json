@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "806193610269",
+    "project_id": "auralearn-223d1",
+    "storage_bucket": "auralearn-223d1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806193610269:android:85bdbbbf59697edcf0d0f4",
+        "android_client_info": {
+          "package_name": "com.eliel.studytrack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOqkmuzfQbFR-Y4YP4oZR18fNk-AG9puM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
