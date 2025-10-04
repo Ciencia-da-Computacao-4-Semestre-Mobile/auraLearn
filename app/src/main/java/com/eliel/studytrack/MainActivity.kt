@@ -11,10 +11,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.eliel.studytrack.components.BottomNavigationBar
 import com.eliel.studytrack.ui.theme.StudyTrackTheme
-
+import com.google.firebase.FirebaseApp
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
         setContent {
             StudyTrackTheme {
                 val navController = rememberNavController()

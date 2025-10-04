@@ -13,122 +13,58 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-
+import com.eliel.studytrack.auth.AuthViewModel
+import com.eliel.studytrack.auth.GoogleAuthHelper
 @Composable
-fun RegisterScreen(navController: NavHostController) {
+fun RegisterScreen(navController: NavHostController, viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var loading by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Cadastro", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(24.dp))
 
-        TextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Nome completo") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        TextField(
-            value = phone,
-            onValueChange = { phone = it },
-            label = { Text("Telefone (opcional)") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        TextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Senha") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation()
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        TextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
-            label = { Text("Confirmar Senha") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation()
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
+        TextField(value = name, onValueChange = { name = it }, label = { Text("Nome completo") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(12.dp))
+        TextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(12.dp))
+        TextField(value = password, onValueChange = { password = it }, label = { Text("Senha") }, singleLine = true, modifier = Modifier.fillMaxWidth(), visualTransformation = PasswordVisualTransformation())
+        Spacer(Modifier.height(12.dp))
+        TextField(value = confirmPassword, onValueChange = { confirmPassword = it }, label = { Text("Confirmar Senha") }, singleLine = true, modifier = Modifier.fillMaxWidth(), visualTransformation = PasswordVisualTransformation())
+        Spacer(Modifier.height(24.dp))
 
         Button(
             onClick = {
-                if (password == confirmPassword && email.isNotBlank() && name.isNotBlank()) {
-                    navController.popBackStack()
-                } else {
-                    // TODO: mostrar mensagem de erro
-                }
+                if (password == confirmPassword) {
+                    loading = true
+                    viewModel.registerUser(email, password) { success, message ->
+                        loading = false
+                        if (success) navController.popBackStack()
+                        else errorMessage = message
+                    }
+                } else errorMessage = "As senhas não coincidem"
             },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Cadastrar")
+            Text(if (loading) "Cadastrando..." else "Cadastrar")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-        OutlinedButton(
-            onClick = {
-                // TODO: implementar login com Google (Firebase Auth/GoogleSignInClient)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.onSurface
-            )
-        ) {
-            Icon(
-                painter = painterResource(id = com.eliel.studytrack.R.drawable.ic_google),
-                contentDescription = "Google",
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text("Continuar com Google")
+        errorMessage?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(it, color = MaterialTheme.colorScheme.error)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Já tem conta? ")
-            TextButton(onClick = { navController.popBackStack() }) {
-                Text("Faça login")
-            }
-        }
+        Spacer(Modifier.height(16.dp))
+        TextButton(onClick = { navController.popBackStack() }) { Text("Já tem conta? Faça login") }
     }
 }
+
