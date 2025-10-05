@@ -15,22 +15,64 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.eliel.studytrack.R
-
+import com.eliel.studytrack.auth.AuthViewModel
+import com.eliel.studytrack.auth.GoogleAuthHelper
 @Composable
-fun LoginScreen(navController: NavHostController) {
+fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var loading by remember { mutableStateOf(false) }
+
+    var googleLoading by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val activity = remember(context) { context.findActivity() ?: throw IllegalStateException("Activity não encontrada") }
+    val googleClient = remember(activity) { GoogleAuthHelper.getClient(activity) }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        googleLoading = false
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val idToken = account.idToken
+                if (idToken.isNullOrBlank()) {
+                    errorMessage = "Não foi possível obter o token do Google."
+                    return@rememberLauncherForActivityResult
+                }
+                googleLoading = true
+                GoogleAuthHelper.firebaseAuthWithGoogle(idToken) { success, msg ->
+                    googleLoading = false
+                    if (success) {
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    } else {
+                        errorMessage = msg ?: "Falha ao autenticar com Google."
+                    }
+                }
+            } catch (e: ApiException) {
+                errorMessage = "Falha no Google Sign-In (código ${e.statusCode})."
+            } catch (e: Exception) {
+                errorMessage = "Erro inesperado no Google Sign-In."
+            }
+        } else if (result.resultCode == Activity.RESULT_CANCELED) {
+            errorMessage = "Login com Google cancelado."
+        } else {
+            errorMessage = "Falha ao retornar do Google Sign-In."
+        }
+    }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Aura Learn", style = MaterialTheme.typography.headlineMedium)
-
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(Modifier.height(32.dp))
 
         TextField(
             value = email,
@@ -41,7 +83,7 @@ fun LoginScreen(navController: NavHostController) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
 
         TextField(
             value = password,
@@ -49,44 +91,45 @@ fun LoginScreen(navController: NavHostController) {
             label = { Text("Senha") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation = PasswordVisualTransformation()
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(24.dp))
 
         Button(
             onClick = {
-                if (email == "admin@admin.com" && password == "admin") {
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                } else {
-                    // TODO: mostrar mensagem de erro
+                loading = true
+                viewModel.loginUser(email, password) { success, message ->
+                    loading = false
+                    if (success) navController.navigate("home") { popUpTo("login") { inclusive = true } }
+                    else errorMessage = message
                 }
             },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Entrar")
+            Text(if (loading) "Entrando..." else "Entrar")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        errorMessage?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
+
+        Spacer(Modifier.height(16.dp))
 
         OutlinedButton(
-            onClick = { /* TODO: login Google Firebase */ },
+            onClick = { /* Implementar Google Sign-In */ },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_google),
-                contentDescription = "Google"
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+            Image(painter = painterResource(id = R.drawable.ic_google), contentDescription = "Google")
+            Spacer(Modifier.width(8.dp))
             Text("Entrar com Google")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
 
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -99,4 +142,10 @@ fun LoginScreen(navController: NavHostController) {
             }
         }
     }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is android.content.ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
