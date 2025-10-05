@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "806193610269-tnuhq0j380n5kj86nl1h9gl77l31his9.apps.googleusercontent.com",
+          "client_id": "806193610269-ifqrtqvf8ifktdcn4qp5fcblt60vi5i0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.eliel.studytrack",
-            "certificate_hash": "ae129b8bc4095568aa01af7dc9cb57b0a331f159"
+            "certificate_hash": "621cfa3159347ac2fc57c96e08f8b371d8b9a691"
           }
         },
         {
