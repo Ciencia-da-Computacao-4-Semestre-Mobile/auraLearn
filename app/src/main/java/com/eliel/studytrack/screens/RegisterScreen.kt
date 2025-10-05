@@ -1,8 +1,10 @@
 package com.eliel.studytrack.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.*
@@ -13,6 +15,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.eliel.studytrack.R
 import com.eliel.studytrack.auth.AuthViewModel
 import com.eliel.studytrack.auth.GoogleAuthHelper
 @Composable
@@ -25,7 +28,9 @@ fun RegisterScreen(navController: NavHostController, viewModel: AuthViewModel = 
     var loading by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -58,6 +63,24 @@ fun RegisterScreen(navController: NavHostController, viewModel: AuthViewModel = 
             Text(if (loading) "Cadastrando..." else "Cadastrar")
         }
 
+        Spacer(Modifier.height(16.dp))
+
+
+        OutlinedButton(
+            onClick = { /* TODO: Implementar lógica de cadastro com Google */ },
+            modifier = Modifier.fillMaxWidth(),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+        ) {
+
+            Image(
+                painter = painterResource(id = R.drawable.ic_google),
+                contentDescription = "Google"
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Cadastrar com Google")
+        }
+
+
         errorMessage?.let {
             Spacer(Modifier.height(8.dp))
             Text(it, color = MaterialTheme.colorScheme.error)
@@ -67,4 +90,3 @@ fun RegisterScreen(navController: NavHostController, viewModel: AuthViewModel = 
         TextButton(onClick = { navController.popBackStack() }) { Text("Já tem conta? Faça login") }
     }
 }
-
