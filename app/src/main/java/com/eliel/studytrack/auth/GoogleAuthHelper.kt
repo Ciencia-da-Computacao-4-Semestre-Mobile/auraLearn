@@ -20,10 +20,18 @@ object GoogleAuthHelper {
 
     fun firebaseAuthWithGoogle(idToken: String, onResult: (Boolean, String?) -> Unit) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-        FirebaseAuth.getInstance().signInWithCredential(credential)
+        val auth = FirebaseAuth.getInstance()
+
+        auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
-                if (task.isSuccessful) onResult(true, null)
-                else onResult(false, task.exception?.message)
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    println("✅ Login Google bem-sucedido: ${user?.email}")
+                    onResult(true, null)
+                } else {
+                    println("❌ Erro login Google: ${task.exception?.message}")
+                    onResult(false, task.exception?.message)
+                }
             }
     }
 

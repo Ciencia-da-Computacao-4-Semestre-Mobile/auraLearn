@@ -54,7 +54,6 @@ fun RegisterScreen(
                 GoogleAuthHelper.firebaseAuthWithGoogle(idToken) { success, msg ->
                     googleLoading = false
                     if (success) {
-                        // Navega para a tela inicial após cadastro com Google
                         navController.navigate("home") {
                             popUpTo("register") { inclusive = true }
                         }
@@ -141,7 +140,7 @@ fun RegisterScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        // Botão de cadastro com Google
+
         OutlinedButton(
             onClick = {
                 googleLoading = true

@@ -16,23 +16,50 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.eliel.studytrack.R
-import com.eliel.studytrack.data.DataSource
 import com.eliel.studytrack.Screen
+import com.eliel.studytrack.data.firestore.UserData
+import com.eliel.studytrack.data.firestore.UserRepository
+import com.eliel.studytrack.auth.AuthViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreenUI(navController: NavHostController) {
-    val pomodoroTime = remember { DataSource.pomodoroTime }
-    val shortBreakTime = remember { DataSource.shortBreakTime }
-    val longBreakTime = remember { DataSource.longBreakTime }
-    val dailyStudyGoalSessions = remember { DataSource.dailyStudyGoalSessions }
+fun SettingsScreenUI(
+    navController: NavHostController,
+    viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
+    val scope = rememberCoroutineScope()
+    var userData by remember { mutableStateOf<UserData?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    val studyRemindersEnabled = remember { DataSource.studyRemindersEnabled }
-    val taskDeadlinesEnabled = remember { DataSource.taskDeadlinesEnabled }
-    val achievementsUnlockedEnabled = remember { DataSource.achievementsUnlockedEnabled }
-    val dailySummaryEnabled = remember { DataSource.dailySummaryEnabled }
+    // 1. Estados para as configurações do Pomodoro
+    // Agora usando remember { mutableStateOf(...) } para serem persistentes
+    // e mutáveis dentro do Composable.
+    val pomodoroTime = remember { mutableStateOf(25) }
+    val shortBreakTime = remember { mutableStateOf(5) }
+    val longBreakTime = remember { mutableStateOf(15) }
+    val dailyStudyGoalSessions = remember { mutableStateOf(4) }
 
-    val appTheme = remember { DataSource.appTheme }
+    val studyRemindersEnabled = remember { mutableStateOf(true) }
+    val taskDeadlinesEnabled = remember { mutableStateOf(true) }
+    val achievementsUnlockedEnabled = remember { mutableStateOf(false) }
+    val dailySummaryEnabled = remember { mutableStateOf(false) }
+
+    val appTheme = remember { mutableStateOf("Claro") }
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            userData = UserRepository.getCurrentUser()
+            isLoading = false
+        }
+    }
+
+    if (isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
     Column(
         modifier = Modifier
@@ -42,7 +69,7 @@ fun SettingsScreenUI(navController: NavHostController) {
             .padding(16.dp)
     ) {
 
-
+        // Card de Perfil (Mantido)
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -61,39 +88,74 @@ fun SettingsScreenUI(navController: NavHostController) {
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text("admin", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Text("admin@admin.com", fontSize = 14.sp, color = Color.Gray)
-                    Text("Plano Gratuito", fontSize = 12.sp, color = Color.Gray)
+                    Text(
+                        userData?.name ?: "Usuário",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                    Text(
+                        userData?.email ?: "email@exemplo.com",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                    Text(
+                        "Plano: ${userData?.plan ?: "Gratuito"}",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-
+        // 2. Adição da seção completa do Timer Pomodoro
         SectionCard(
             iconId = R.drawable.ic_timer,
             iconTint = Color(0xFFFF5252),
             title = "Timer Pomodoro"
         ) {
             Column {
+                // Linha 1: Tempo de Estudo e Pausa Curta
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TimeDropdown("Tempo de Estudo (min)", listOf(20, 25, 30, 35, 40), pomodoroTime, modifier = Modifier.weight(1f))
+                    TimeDropdown(
+                        label = "Tempo de Estudo (min)",
+                        options = listOf(20, 25, 30, 35, 40),
+                        value = pomodoroTime,
+                        modifier = Modifier.weight(1f)
+                    )
                     Spacer(modifier = Modifier.width(16.dp))
-                    TimeDropdown("Pausa Curta (min)", listOf(5, 10, 15), shortBreakTime, modifier = Modifier.weight(1f))
+                    TimeDropdown(
+                        label = "Pausa Curta (min)",
+                        options = listOf(5, 10, 15),
+                        value = shortBreakTime,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
+                // Linha 2: Pausa Longa e Meta Diária
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TimeDropdown("Pausa Longa (min)", listOf(15, 20, 25, 30), longBreakTime, modifier = Modifier.weight(1f))
+                    TimeDropdown(
+                        label = "Pausa Longa (min)",
+                        options = listOf(15, 20, 25, 30),
+                        value = longBreakTime,
+                        modifier = Modifier.weight(1f)
+                    )
                     Spacer(modifier = Modifier.width(16.dp))
-                    TimeDropdown("Meta Diária (sessões)", listOf(2, 4, 6, 8), dailyStudyGoalSessions, isSession = true, modifier = Modifier.weight(1f))
+                    TimeDropdown(
+                        label = "Meta Diária (sessões)",
+                        options = listOf(2, 4, 6, 8),
+                        value = dailyStudyGoalSessions,
+                        isSession = true,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-
+        // Seção de Notificações (Mantida)
         SectionCard(
             iconId = R.drawable.ic_notifications,
             iconTint = Color(0xFF4CAF50),
@@ -107,29 +169,30 @@ fun SettingsScreenUI(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-
+        // Seção de Aparência (Mantida)
         AppearanceSection(appTheme)
 
         Spacer(modifier = Modifier.height(20.dp))
 
-
+        // Seção "Sobre o App" (Mantida)
         SectionCard(
             iconId = R.drawable.ic_info,
             iconTint = Color(0xFF0288D1),
             title = "Sobre o App"
         ) {
             Text("Versão: 1.0.0", fontSize = 14.sp)
-            Text("Última atualização: 14/09/2025", fontSize = 14.sp)
+            Text("Última atualização: 04/10/2025", fontSize = 14.sp)
             Text("Desenvolvido por Eliel", fontSize = 14.sp, color = Color.Gray)
         }
 
         Spacer(modifier = Modifier.height(20.dp))
+
+        // Botões (Mantidos)
         Button(
             onClick = { navController.navigate(Screen.Premium.route) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)), // Gold color
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700))
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_crown),
@@ -139,9 +202,16 @@ fun SettingsScreenUI(navController: NavHostController) {
             Spacer(modifier = Modifier.width(8.dp))
             Text("Assine o Premium", color = Color.Black, fontWeight = FontWeight.Bold)
         }
+
         Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedButton(
-            onClick = { /* TODO: ação de logout */ },
+            onClick = {
+                viewModel.logout()
+                navController.navigate("login") {
+                    popUpTo("home") { inclusive = true }
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
@@ -163,6 +233,7 @@ fun SettingsScreenUI(navController: NavHostController) {
     }
 }
 
+// 3. Funções auxiliares (Mantidas)
 @Composable
 fun SectionCard(
     iconId: Int,
