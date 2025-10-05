@@ -32,9 +32,6 @@ fun SettingsScreenUI(
     var userData by remember { mutableStateOf<UserData?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // 1. Estados para as configurações do Pomodoro
-    // Agora usando remember { mutableStateOf(...) } para serem persistentes
-    // e mutáveis dentro do Composable.
     val pomodoroTime = remember { mutableStateOf(25) }
     val shortBreakTime = remember { mutableStateOf(5) }
     val longBreakTime = remember { mutableStateOf(15) }
@@ -69,7 +66,6 @@ fun SettingsScreenUI(
             .padding(16.dp)
     ) {
 
-        // Card de Perfil (Mantido)
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -109,14 +105,12 @@ fun SettingsScreenUI(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 2. Adição da seção completa do Timer Pomodoro
         SectionCard(
             iconId = R.drawable.ic_timer,
             iconTint = Color(0xFFFF5252),
             title = "Timer Pomodoro"
         ) {
             Column {
-                // Linha 1: Tempo de Estudo e Pausa Curta
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     TimeDropdown(
                         label = "Tempo de Estudo (min)",
@@ -133,7 +127,6 @@ fun SettingsScreenUI(
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                // Linha 2: Pausa Longa e Meta Diária
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     TimeDropdown(
                         label = "Pausa Longa (min)",
@@ -155,7 +148,6 @@ fun SettingsScreenUI(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Seção de Notificações (Mantida)
         SectionCard(
             iconId = R.drawable.ic_notifications,
             iconTint = Color(0xFF4CAF50),
@@ -169,12 +161,12 @@ fun SettingsScreenUI(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Seção de Aparência (Mantida)
+
         AppearanceSection(appTheme)
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Seção "Sobre o App" (Mantida)
+
         SectionCard(
             iconId = R.drawable.ic_info,
             iconTint = Color(0xFF0288D1),
@@ -187,7 +179,7 @@ fun SettingsScreenUI(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Botões (Mantidos)
+
         Button(
             onClick = { navController.navigate(Screen.Premium.route) },
             modifier = Modifier.fillMaxWidth(),
@@ -233,7 +225,7 @@ fun SettingsScreenUI(
     }
 }
 
-// 3. Funções auxiliares (Mantidas)
+
 @Composable
 fun SectionCard(
     iconId: Int,
