@@ -6,21 +6,23 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.eliel.studytrack.screens.*
+import android.app.Activity
 
 @Composable
-fun StudyTrackNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+fun StudyTrackNavHost(
+    navController: NavHostController,
+    activity: Activity,
+    modifier: Modifier = Modifier
+) {
     NavHost(navController = navController, startDestination = "login", modifier = modifier) {
 
-
         composable("login") {
-            LoginScreen(navController = navController)
+            LoginScreen(navController = navController, activity = activity) //
         }
-
 
         composable("register") {
-            RegisterScreen(navController = navController)
+            RegisterScreen(navController = navController, activity = activity) //
         }
-
 
         composable(Screen.Home.route) { HomeScreenUI(navController) }
         composable(Screen.Schedule.route) { ScheduleScreen(navController) }

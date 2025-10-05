@@ -1,7 +1,12 @@
 package com.eliel.studytrack.screens
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -10,24 +15,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import com.eliel.studytrack.R
 import com.eliel.studytrack.auth.AuthViewModel
 import com.eliel.studytrack.auth.GoogleAuthHelper
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
+
 @Composable
-fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+fun LoginScreen(
+    activity: Activity,
+    navController: NavHostController,
+    viewModel: AuthViewModel = viewModel()
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
-
     var googleLoading by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
-    val activity = remember(context) { context.findActivity() ?: throw IllegalStateException("Activity não encontrada") }
     val googleClient = remember(activity) { GoogleAuthHelper.getClient(activity) }
 
     val googleSignInLauncher = rememberLauncherForActivityResult(
@@ -67,7 +74,9 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = and
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -102,8 +111,9 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = and
                 loading = true
                 viewModel.loginUser(email, password) { success, message ->
                     loading = false
-                    if (success) navController.navigate("home") { popUpTo("login") { inclusive = true } }
-                    else errorMessage = message
+                    if (success) navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    } else errorMessage = message
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -120,13 +130,17 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = and
         Spacer(Modifier.height(16.dp))
 
         OutlinedButton(
-            onClick = { /* Implementar Google Sign-In */ },
+            onClick = {
+                googleLoading = true
+                val signInIntent = googleClient.signInIntent
+                googleSignInLauncher.launch(signInIntent)
+            },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         ) {
             Image(painter = painterResource(id = R.drawable.ic_google), contentDescription = "Google")
             Spacer(Modifier.width(8.dp))
-            Text("Entrar com Google")
+            Text(if (googleLoading) "Carregando..." else "Entrar com Google")
         }
 
         Spacer(Modifier.height(16.dp))
@@ -142,10 +156,4 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = and
             }
         }
     }
-}
-
-private tailrec fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
-    is android.content.ContextWrapper -> baseContext.findActivity()
-    else -> null
 }

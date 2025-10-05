@@ -12,9 +12,6 @@
           "package_name": "com.eliel.studytrack"
         }
       },
-<<<<<<< HEAD
-      "oauth_client": [],
-=======
       "oauth_client": [
         {
           "client_id": "806193610269-tnuhq0j380n5kj86nl1h9gl77l31his9.apps.googleusercontent.com",
@@ -29,7 +26,6 @@
           "client_type": 3
         }
       ],
->>>>>>> 88c2ca2c95803f270e55f6a9d22e7732eaeeb44e
       "api_key": [
         {
           "current_key": "AIzaSyAOqkmuzfQbFR-Y4YP4oZR18fNk-AG9puM"
@@ -37,16 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-<<<<<<< HEAD
-          "other_platform_oauth_client": []
-=======
           "other_platform_oauth_client": [
             {
               "client_id": "806193610269-i9b696qo3cgd74o098vpastnul8nhvbn.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
->>>>>>> 88c2ca2c95803f270e55f6a9d22e7732eaeeb44e
         }
       }
     }

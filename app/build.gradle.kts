@@ -5,7 +5,6 @@ plugins {
     id("com.google.gms.google-services")
 }
 
-
 android {
     namespace = "com.eliel.studytrack"
     compileSdk = 36
@@ -34,7 +33,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
@@ -60,11 +59,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-<<<<<<< HEAD
-    implementation(platform("com.google.firebase:firebase-bom:34.3.0"))
-    implementation("com.google.firebase:firebase-analytics")
-}
-=======
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
@@ -72,6 +66,7 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
     implementation("com.google.firebase:firebase-auth:23.1.0")
-
+    implementation("androidx.activity:activity-compose:1.8.0")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation("com.google.firebase:firebase-auth-ktx")
 }
->>>>>>> 88c2ca2c95803f270e55f6a9d22e7732eaeeb44e

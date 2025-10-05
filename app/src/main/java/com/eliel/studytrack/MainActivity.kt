@@ -1,5 +1,6 @@
 package com.eliel.studytrack
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,20 +13,23 @@ import androidx.navigation.compose.rememberNavController
 import com.eliel.studytrack.components.BottomNavigationBar
 import com.eliel.studytrack.ui.theme.StudyTrackTheme
 import com.google.firebase.FirebaseApp
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
+
         setContent {
             StudyTrackTheme {
                 val navController = rememberNavController()
-
+                val activity: Activity = this@MainActivity
 
                 Scaffold(
                     bottomBar = { BottomBarConditional(navController) }
                 ) { paddingValues ->
                     StudyTrackNavHost(
                         navController = navController,
+                        activity = activity,
                         modifier = Modifier.padding(paddingValues)
                     )
                 }
