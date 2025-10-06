@@ -32,6 +32,9 @@ import com.eliel.studytrack.data.firestore.SubjectRepository
 import com.eliel.studytrack.data.firestore.TaskRepository
 import kotlinx.coroutines.launch
 import java.util.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 
 @Composable
 fun ScheduleScreenUI(navController: NavHostController) {
@@ -58,7 +61,6 @@ fun ScheduleScreenUI(navController: NavHostController) {
             .padding(16.dp)
     ) {
 
-        // Título + Botão de Nova Tarefa
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -83,7 +85,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Tabs: Tarefas / Matérias
+
         TabRow(
             selectedTabIndex = selectedTabIndex,
             containerColor = Color.Transparent,
@@ -100,7 +102,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Conteúdo das abas
+
         when (selectedTabIndex) {
             0 -> TasksContent(
                 tasks = tasks,
@@ -131,7 +133,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
         }
     }
 
-    // Diálogo de Nova Tarefa
+
     if (showNewTaskDialog) {
         NewTaskDialog(
             onDismiss = { showNewTaskDialog = false },
@@ -146,7 +148,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
         )
     }
 
-    // Diálogo de Nova Matéria
+
     if (showNewSubjectDialog) {
         NewSubjectDialog(
             onDismiss = { showNewSubjectDialog = false },
@@ -172,6 +174,8 @@ fun TasksContent(
     var expanded by remember { mutableStateOf(false) }
     val subjectOptions = listOf("Todas") + subjects.map { it.name }
     var selectedSubjectFilter by remember { mutableStateOf("Todas") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var taskToDelete by remember { mutableStateOf<String?>(null) }
 
     val filteredTasks = tasks.filter {
         selectedSubjectFilter == "Todas" || it.subject == selectedSubjectFilter
@@ -189,7 +193,9 @@ fun TasksContent(
                 readOnly = true,
                 label = { Text("Filtrar por") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
             )
             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 subjectOptions.forEach { subject ->
@@ -211,36 +217,128 @@ fun TasksContent(
                 TaskItem(
                     task = task,
                     onToggle = { onToggleComplete(task) },
-                    onDelete = { onDeleteTask(task.id) }
+                    onDelete = {
+                        taskToDelete = task.id
+                        showDeleteDialog = true
+                    }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
+
+    if (showDeleteDialog) {
+        ConfirmDeleteDialog(
+            title = "Excluir Tarefa",
+            message = "Tem certeza que deseja excluir esta tarefa?",
+            onConfirm = {
+                taskToDelete?.let { onDeleteTask(it) }
+                showDeleteDialog = false
+                taskToDelete = null
+            },
+            onDismiss = {
+                showDeleteDialog = false
+                taskToDelete = null
+            }
+        )
+    }
 }
 
 @Composable
 fun TaskItem(task: TaskData, onToggle: () -> Unit, onDelete: () -> Unit) {
+    val backgroundColor = if (task.isCompleted) {
+        Color(0xFF4CAF50).copy(alpha = 0.1f) // Verde claro para tarefas concluídas
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+
+    val borderColor = if (task.isCompleted) {
+        Color(0xFF4CAF50) // Verde para borda
+    } else {
+        Color.Transparent
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = if (task.isCompleted) 2.dp else 0.dp,
+                color = borderColor,
+                shape = RoundedCornerShape(8.dp)
+            ),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            RadioButton(selected = task.isCompleted, onClick = onToggle)
+            Checkbox(
+                checked = task.isCompleted,
+                onCheckedChange = { onToggle() },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = Color(0xFF4CAF50),
+                    uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            )
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = task.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                task.description?.let { Text(text = it, fontSize = 12.sp) }
+                Text(
+                    text = task.title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = if (task.isCompleted) {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    textDecoration = if (task.isCompleted) {
+                        androidx.compose.ui.text.style.TextDecoration.LineThrough
+                    } else {
+                        null
+                    }
+                )
+                task.description?.let {
+                    Text(
+                        text = it,
+                        fontSize = 12.sp,
+                        color = if (task.isCompleted) {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        }
+                    )
+                }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "Matéria: ${task.subject}", fontSize = 12.sp)
-                Text(text = "Prazo: ${task.dueDate}", fontSize = 12.sp)
+                Text(
+                    text = "Matéria: ${task.subject}",
+                    fontSize = 12.sp,
+                    color = if (task.isCompleted) {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    }
+                )
+                Text(
+                    text = "Prazo: ${task.dueDate}",
+                    fontSize = 12.sp,
+                    color = if (task.isCompleted) {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    }
+                )
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Close, contentDescription = "Excluir")
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Excluir",
+                    tint = if (task.isCompleted) {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    }
+                )
             }
         }
     }
@@ -252,6 +350,9 @@ fun SubjectsContent(
     onNewSubjectClick: () -> Unit,
     onDeleteSubject: (String) -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var subjectToDelete by remember { mutableStateOf<String?>(null) }
+
     Column {
         Button(
             onClick = onNewSubjectClick,
@@ -268,15 +369,37 @@ fun SubjectsContent(
 
         LazyColumn {
             items(subjects) { subject ->
-                SubjectItem(subject, onDeleteSubject)
+                SubjectItem(
+                    subject = subject,
+                    onDelete = {
+                        subjectToDelete = subject.id
+                        showDeleteDialog = true
+                    }
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
+
+    if (showDeleteDialog) {
+        ConfirmDeleteDialog(
+            title = "Excluir Matéria",
+            message = "Tem certeza que deseja excluir esta matéria? Todas as tarefas relacionadas também serão afetadas.",
+            onConfirm = {
+                subjectToDelete?.let { onDeleteSubject(it) }
+                showDeleteDialog = false
+                subjectToDelete = null
+            },
+            onDismiss = {
+                showDeleteDialog = false
+                subjectToDelete = null
+            }
+        )
+    }
 }
 
 @Composable
-fun SubjectItem(subject: SubjectData, onDelete: (String) -> Unit) {
+fun SubjectItem(subject: SubjectData, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -297,7 +420,7 @@ fun SubjectItem(subject: SubjectData, onDelete: (String) -> Unit) {
                 Text(text = "Meta: ${subject.weeklyGoalHours}h/semana", fontSize = 12.sp)
                 Text(text = "Progresso: ${subject.currentWeeklyProgressHours}h", fontSize = 12.sp)
             }
-            IconButton(onClick = { onDelete(subject.id) }) {
+            IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Close, contentDescription = "Excluir matéria")
             }
         }
@@ -332,12 +455,14 @@ fun NewTaskDialog(
                 Spacer(modifier = Modifier.height(12.dp))
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                     OutlinedTextField(
-                        value = selectedSubject,
+                        value = if (selectedSubject.isNotBlank()) selectedSubject else "Selecione uma matéria",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Matéria") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
                     )
                     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         subjects.forEach { subject ->
@@ -352,7 +477,37 @@ fun NewTaskDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(value = dueDate, onValueChange = { dueDate = it }, label = { Text("Prazo (dd/mm/aaaa)") })
+                val context = LocalContext.current
+                val calendar = Calendar.getInstance()
+                val datePicker = remember {
+                    android.app.DatePickerDialog(
+                        context,
+                        { _, year, month, dayOfMonth ->
+                            dueDate = "%02d/%02d/%04d".format(dayOfMonth, month + 1, year)
+                        },
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH)
+                    )
+                }
+
+                OutlinedTextField(
+                    value = dueDate,
+                    onValueChange = {},
+                    label = { Text("Prazo") },
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    interactionSource = remember { MutableInteractionSource() }
+                        .also { interactionSource ->
+                            LaunchedEffect(interactionSource) {
+                                interactionSource.interactions.collect {
+                                    if (it is PressInteraction.Release) {
+                                        datePicker.show()
+                                    }
+                                }
+                            }
+                        }
+                )
                 Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(value = estimatedTime, onValueChange = { estimatedTime = it }, label = { Text("Tempo estimado (min)") })
                 Spacer(modifier = Modifier.height(24.dp))
@@ -379,6 +534,47 @@ fun NewTaskDialog(
             }
         }
     }
+}
+
+@Composable
+fun ConfirmDeleteDialog(
+    title: String,
+    message: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+        },
+        text = {
+            Text(
+                text = message,
+                fontSize = 16.sp
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Excluir")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
+        shape = RoundedCornerShape(16.dp)
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -459,4 +655,3 @@ fun NewSubjectDialog(
         }
     }
 }
-
