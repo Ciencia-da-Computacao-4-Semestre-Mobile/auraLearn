@@ -1,6 +1,7 @@
 package com.eliel.studytrack.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,10 +26,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import com.eliel.studytrack.R
-import com.eliel.studytrack.data.DataSource
-import com.eliel.studytrack.data.Priority
-import com.eliel.studytrack.data.Subject
-import com.eliel.studytrack.data.Task
+import com.eliel.studytrack.data.firestore.SubjectData
+import com.eliel.studytrack.data.firestore.TaskData
+import com.eliel.studytrack.data.firestore.SubjectRepository
+import com.eliel.studytrack.data.firestore.TaskRepository
+import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
@@ -37,6 +39,18 @@ fun ScheduleScreenUI(navController: NavHostController) {
     var showNewTaskDialog by remember { mutableStateOf(false) }
     var showNewSubjectDialog by remember { mutableStateOf(false) }
 
+    var subjects by remember { mutableStateOf(listOf<SubjectData>()) }
+    var tasks by remember { mutableStateOf(listOf<TaskData>()) }
+
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            subjects = SubjectRepository.getSubjects()
+            tasks = TaskRepository.getTasks()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -44,6 +58,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
             .padding(16.dp)
     ) {
 
+        // Título + Botão de Nova Tarefa
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -68,7 +83,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
+        // Tabs: Tarefas / Matérias
         TabRow(
             selectedTabIndex = selectedTabIndex,
             containerColor = Color.Transparent,
@@ -85,30 +100,62 @@ fun ScheduleScreenUI(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
+        // Conteúdo das abas
         when (selectedTabIndex) {
-            0 -> TasksContent()
-            1 -> SubjectsContent(onNewSubjectClick = { showNewSubjectDialog = true })
+            0 -> TasksContent(
+                tasks = tasks,
+                subjects = subjects,
+                onToggleComplete = { task ->
+                    scope.launch {
+                        TaskRepository.updateTaskStatus(task.id, !task.isCompleted)
+                        tasks = TaskRepository.getTasks()
+                    }
+                },
+                onDeleteTask = { id ->
+                    scope.launch {
+                        TaskRepository.deleteTask(id)
+                        tasks = TaskRepository.getTasks()
+                    }
+                }
+            )
+            1 -> SubjectsContent(
+                subjects = subjects,
+                onNewSubjectClick = { showNewSubjectDialog = true },
+                onDeleteSubject = { id ->
+                    scope.launch {
+                        SubjectRepository.deleteSubject(id)
+                        subjects = SubjectRepository.getSubjects()
+                    }
+                }
+            )
         }
     }
 
-
+    // Diálogo de Nova Tarefa
     if (showNewTaskDialog) {
         NewTaskDialog(
             onDismiss = { showNewTaskDialog = false },
+            subjects = subjects.map { it.name },
             onSave = { task ->
-                DataSource.tasks.add(task)
-                showNewTaskDialog = false
+                scope.launch {
+                    TaskRepository.addTask(task)
+                    tasks = TaskRepository.getTasks()
+                    showNewTaskDialog = false
+                }
             }
         )
     }
 
+    // Diálogo de Nova Matéria
     if (showNewSubjectDialog) {
         NewSubjectDialog(
             onDismiss = { showNewSubjectDialog = false },
             onSave = { subject ->
-                DataSource.subjects.add(subject)
-                showNewSubjectDialog = false
+                scope.launch {
+                    SubjectRepository.addSubject(subject)
+                    subjects = SubjectRepository.getSubjects()
+                    showNewSubjectDialog = false
+                }
             }
         )
     }
@@ -116,17 +163,21 @@ fun ScheduleScreenUI(navController: NavHostController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TasksContent() {
+fun TasksContent(
+    tasks: List<TaskData>,
+    subjects: List<SubjectData>,
+    onToggleComplete: (TaskData) -> Unit,
+    onDeleteTask: (String) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
-    val subjectOptions = DataSource.getSubjectNames()
-    var selectedSubjectFilter by remember { mutableStateOf(subjectOptions[0]) }
+    val subjectOptions = listOf("Todas") + subjects.map { it.name }
+    var selectedSubjectFilter by remember { mutableStateOf("Todas") }
 
-    val filteredTasks = remember(selectedSubjectFilter) {
-        DataSource.getTasksForSubject(selectedSubjectFilter)
+    val filteredTasks = tasks.filter {
+        selectedSubjectFilter == "Todas" || it.subject == selectedSubjectFilter
     }
 
     Column {
-
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded },
@@ -140,10 +191,7 @@ fun TasksContent() {
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier.fillMaxWidth()
             )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
+            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 subjectOptions.forEach { subject ->
                     DropdownMenuItem(
                         text = { Text(subject) },
@@ -158,10 +206,13 @@ fun TasksContent() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
         LazyColumn {
             items(filteredTasks) { task ->
-                TaskItem(task = task) { /* TODO: Atualizar tarefa */ }
+                TaskItem(
+                    task = task,
+                    onToggle = { onToggleComplete(task) },
+                    onDelete = { onDeleteTask(task.id) }
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -169,53 +220,38 @@ fun TasksContent() {
 }
 
 @Composable
-fun TaskItem(task: Task, onTaskClick: (Task) -> Unit) {
+fun TaskItem(task: TaskData, onToggle: () -> Unit, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            RadioButton(selected = task.isCompleted, onClick = { onTaskClick(task) })
+            RadioButton(selected = task.isCompleted, onClick = onToggle)
             Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(text = task.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
-                task.description?.let {
-                    Text(text = it, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = task.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                task.description?.let { Text(text = it, fontSize = 12.sp) }
                 Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Chip(
-                        text = task.priority.name.lowercase(),
-                        color = when (task.priority) {
-                            Priority.ALTA -> Color.Red
-                            Priority.MEDIA -> Color(0xFFFFC107)
-                            Priority.BAIXA -> Color(0xFF00C853)
-                        }
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    if (task.isOverdue) {
-                        Chip(text = "Atrasada", color = Color(0xFFF44336))
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Icon(painterResource(id = R.drawable.ic_calendar), contentDescription = "Data", modifier = Modifier.size(16.dp))
-                    Text(text = task.dueDate, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(painterResource(id = R.drawable.ic_time), contentDescription = "Tempo", modifier = Modifier.size(16.dp))
-                    Text(text = task.estimatedTime, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                Text(text = "Matéria: ${task.subject}", fontSize = 12.sp)
+                Text(text = "Prazo: ${task.dueDate}", fontSize = 12.sp)
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Close, contentDescription = "Excluir")
             }
         }
     }
 }
 
 @Composable
-fun SubjectsContent(onNewSubjectClick: () -> Unit) {
+fun SubjectsContent(
+    subjects: List<SubjectData>,
+    onNewSubjectClick: () -> Unit,
+    onDeleteSubject: (String) -> Unit
+) {
     Column {
         Button(
             onClick = onNewSubjectClick,
@@ -231,8 +267,8 @@ fun SubjectsContent(onNewSubjectClick: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn {
-            items(DataSource.subjects) { subject ->
-                SubjectItem(subject = subject)
+            items(subjects) { subject ->
+                SubjectItem(subject, onDeleteSubject)
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -240,58 +276,31 @@ fun SubjectsContent(onNewSubjectClick: () -> Unit) {
 }
 
 @Composable
-fun SubjectItem(subject: Subject) {
+fun SubjectItem(subject: SubjectData, onDelete: (String) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(painterResource(id = R.drawable.ic_book_open), contentDescription = "Matéria", tint = subject.color)
+            Icon(
+                painterResource(id = R.drawable.ic_book_open),
+                contentDescription = "Matéria",
+                tint = Color(subject.color)
+            )
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = subject.name, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Chip(
-                        text = subject.priority.name.lowercase(),
-                        color = when (subject.priority) {
-                            Priority.ALTA -> Color.Red
-                            Priority.MEDIA -> Color(0xFFFFC107)
-                            Priority.BAIXA -> Color(0xFF00C853)
-                        }
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "Meta: ${subject.weeklyGoalHours}h/semana", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Text(text = "Progresso semanal", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(text = "${subject.currentWeeklyProgressHours}h / ${subject.weeklyGoalHours}h", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = subject.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(text = "Meta: ${subject.weeklyGoalHours}h/semana", fontSize = 12.sp)
+                Text(text = "Progresso: ${subject.currentWeeklyProgressHours}h", fontSize = 12.sp)
             }
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .background(subject.color, RoundedCornerShape(4.dp))
-            )
+            IconButton(onClick = { onDelete(subject.id) }) {
+                Icon(Icons.Default.Close, contentDescription = "Excluir matéria")
+            }
         }
-    }
-}
-
-@Composable
-fun Chip(text: String, color: Color) {
-    Card(
-        shape = RoundedCornerShape(4.dp),
-        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.2f))
-    ) {
-        Text(
-            text = text,
-            color = color,
-            fontSize = 10.sp,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-        )
     }
 }
 
@@ -299,210 +308,73 @@ fun Chip(text: String, color: Color) {
 @Composable
 fun NewTaskDialog(
     onDismiss: () -> Unit,
-    onSave: (Task) -> Unit
+    subjects: List<String>,
+    onSave: (TaskData) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedSubject by remember { mutableStateOf("") }
-    var selectedPriority by remember { mutableStateOf(Priority.MEDIA) }
     var dueDate by remember { mutableStateOf("") }
     var estimatedTime by remember { mutableStateOf("30") }
-
-    var subjectExpanded by remember { mutableStateOf(false) }
-    var priorityExpanded by remember { mutableStateOf(false) }
-
-    val subjects = DataSource.subjects.map { it.name }
-    val priorities = Priority.values().toList()
+    var expanded by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Nova Tarefa",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Fechar")
-                    }
-                }
-
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text("Nova Tarefa", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 Spacer(modifier = Modifier.height(16.dp))
-
-
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Título") },
-                    placeholder = { Text("Digite o título da tarefa") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Título") }, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(12.dp))
-
-
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Descrição") },
-                    placeholder = { Text("Descreva a tarefa (opcional)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
-                )
-
+                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Descrição") }, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-
-                    ExposedDropdownMenuBox(
-                        expanded = subjectExpanded,
-                        onExpandedChange = { subjectExpanded = !subjectExpanded },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        OutlinedTextField(
-                            value = selectedSubject,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Matéria") },
-                            placeholder = { Text("Escolher") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = subjectExpanded) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = subjectExpanded,
-                            onDismissRequest = { subjectExpanded = false }
-                        ) {
-                            subjects.forEach { subject ->
-                                DropdownMenuItem(
-                                    text = { Text(subject) },
-                                    onClick = {
-                                        selectedSubject = subject
-                                        subjectExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-
-                    ExposedDropdownMenuBox(
-                        expanded = priorityExpanded,
-                        onExpandedChange = { priorityExpanded = !priorityExpanded },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        OutlinedTextField(
-                            value = when (selectedPriority) {
-                                Priority.ALTA -> "Alta"
-                                Priority.MEDIA -> "Média"
-                                Priority.BAIXA -> "Baixa"
-                            },
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Prioridade") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = priorityExpanded) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = priorityExpanded,
-                            onDismissRequest = { priorityExpanded = false }
-                        ) {
-                            priorities.forEach { priority ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(when (priority) {
-                                            Priority.ALTA -> "Alta"
-                                            Priority.MEDIA -> "Média"
-                                            Priority.BAIXA -> "Baixa"
-                                        })
-                                    },
-                                    onClick = {
-                                        selectedPriority = priority
-                                        priorityExpanded = false
-                                    }
-                                )
-                            }
+                ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                    OutlinedTextField(
+                        value = selectedSubject,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Matéria") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        subjects.forEach { subject ->
+                            DropdownMenuItem(
+                                text = { Text(subject) },
+                                onClick = {
+                                    selectedSubject = subject
+                                    expanded = false
+                                }
+                            )
                         }
                     }
                 }
-
                 Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-
-                    OutlinedTextField(
-                        value = dueDate,
-                        onValueChange = { dueDate = it },
-                        label = { Text("Data Limite") },
-                        placeholder = { Text("dd/mm/aaaa") },
-                        modifier = Modifier.weight(1f)
-                    )
-
-
-                    OutlinedTextField(
-                        value = estimatedTime,
-                        onValueChange = { estimatedTime = it },
-                        label = { Text("Tempo (min)") },
-                        placeholder = { Text("30") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
+                OutlinedTextField(value = dueDate, onValueChange = { dueDate = it }, label = { Text("Prazo (dd/mm/aaaa)") })
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(value = estimatedTime, onValueChange = { estimatedTime = it }, label = { Text("Tempo estimado (min)") })
                 Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cancelar")
-                    }
-
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Cancelar") }
                     Button(
                         onClick = {
                             if (title.isNotBlank() && selectedSubject.isNotBlank() && dueDate.isNotBlank()) {
-                                val newTask = Task(
+                                val newTask = TaskData(
                                     id = UUID.randomUUID().toString(),
                                     title = title,
-                                    description = description.takeIf { it.isNotBlank() },
+                                    description = description,
                                     subject = selectedSubject,
                                     dueDate = dueDate,
-                                    estimatedTime = "${estimatedTime}min",
-                                    priority = selectedPriority,
-                                    isCompleted = false,
-                                    isOverdue = false
+                                    estimatedTime = estimatedTime,
+                                    isCompleted = false
                                 )
                                 onSave(newTask)
                             }
                         },
-                        modifier = Modifier.weight(1f),
-                        enabled = title.isNotBlank() && selectedSubject.isNotBlank() && dueDate.isNotBlank()
-                    ) {
-                        Text("Salvar")
-                    }
+                        modifier = Modifier.weight(1f)
+                    ) { Text("Salvar") }
                 }
             }
         }
@@ -513,167 +385,75 @@ fun NewTaskDialog(
 @Composable
 fun NewSubjectDialog(
     onDismiss: () -> Unit,
-    onSave: (Subject) -> Unit
+    onSave: (SubjectData) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var selectedColor by remember { mutableStateOf(Color(0xFF6200EE)) }
     var weeklyGoal by remember { mutableStateOf("3") }
-    var totalPlanned by remember { mutableStateOf("20") }
+    var selectedColor by remember { mutableStateOf(0xFF2196F3) }
 
-    val availableColors = listOf(
-        Color(0xFF2196F3), // Azul
-        Color(0xFF9C27B0), // Roxo
-        Color(0xFFFF9800), // Laranja
-        Color(0xFF4CAF50), // Verde
-        Color(0xFF009688), // Verde água
-        Color(0xFFE91E63), // Rosa
-        Color(0xFFF44336), // Vermelho
-        Color(0xFF6366F1)  // Azul roxo
+    val colors = listOf(
+        0xFF2196F3,
+        0xFF9C27B0,
+        0xFFFF9800,
+        0xFF4CAF50,
+        0xFFE91E63,
+        0xFFF44336,
+        0xFF009688
     )
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Nova Matéria",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Fechar")
-                    }
-                }
-
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text("Nova Matéria", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 Spacer(modifier = Modifier.height(16.dp))
-
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nome da matéria") },
-                    placeholder = { Text("Nome da matéria") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome da matéria") }, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(16.dp))
-
-
-                Text(
-                    text = "Cor da matéria",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
+                Text("Cor", fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(8.dp))
-
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(availableColors) { color ->
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(colors) { color ->
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
-                                .background(
-                                    color = color,
+                                .size(36.dp)
+                                .background(Color(color), CircleShape)
+                                .clickable { selectedColor = color }
+                                .border(
+                                    width = if (selectedColor == color) 3.dp else 1.dp,
+                                    color = if (selectedColor == color) Color.Black else Color.LightGray,
                                     shape = CircleShape
                                 )
-                                .clickable { selectedColor = color }
-                                .then(
-                                    if (selectedColor == color) {
-                                        Modifier.background(
-                                            Color.White.copy(alpha = 0.3f),
-                                            CircleShape
-                                        )
-                                    } else Modifier
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (selectedColor == color) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = "Selecionado",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
+                        )
                     }
                 }
-
                 Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-
-                    OutlinedTextField(
-                        value = weeklyGoal,
-                        onValueChange = { weeklyGoal = it },
-                        label = { Text("Meta semanal (h)") },
-                        placeholder = { Text("3") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    
-                    OutlinedTextField(
-                        value = totalPlanned,
-                        onValueChange = { totalPlanned = it },
-                        label = { Text("Total planejado (h)") },
-                        placeholder = { Text("20") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
+                OutlinedTextField(
+                    value = weeklyGoal,
+                    onValueChange = { weeklyGoal = it },
+                    label = { Text("Meta semanal (h)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cancelar")
-                    }
-
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Cancelar") }
                     Button(
                         onClick = {
-                            if (name.isNotBlank() && weeklyGoal.isNotBlank()) {
-                                val newSubject = Subject(
+                            if (name.isNotBlank()) {
+                                val newSubject = SubjectData(
                                     id = UUID.randomUUID().toString(),
                                     name = name,
                                     weeklyGoalHours = weeklyGoal.toIntOrNull() ?: 3,
-                                    priority = Priority.MEDIA, // Prioridade padrão
                                     color = selectedColor,
                                     currentWeeklyProgressHours = 0
                                 )
                                 onSave(newSubject)
                             }
                         },
-                        modifier = Modifier.weight(1f),
-                        enabled = name.isNotBlank() && weeklyGoal.isNotBlank()
-                    ) {
-                        Text("Salvar")
-                    }
+                        modifier = Modifier.weight(1f)
+                    ) { Text("Salvar") }
                 }
             }
         }
