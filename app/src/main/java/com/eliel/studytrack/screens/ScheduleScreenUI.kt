@@ -35,6 +35,8 @@ import java.util.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.ui.draw.clip
+
 
 @Composable
 fun ScheduleScreenUI(navController: NavHostController) {
@@ -109,7 +111,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
                 subjects = subjects,
                 onToggleComplete = { task ->
                     scope.launch {
-                        TaskRepository.updateTaskStatus(task.id, !task.isCompleted)
+                        TaskRepository.updateTaskStatus(task.id, !task.completed)
                         tasks = TaskRepository.getTasks()
                     }
                 },
@@ -195,7 +197,9 @@ fun TasksContent(
                 readOnly = true,
                 label = { Text("Filtrar por") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.fillMaxWidth().menuAnchor()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
             )
             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 subjectOptions.forEach { subject ->
@@ -217,7 +221,7 @@ fun TasksContent(
                 TaskItem(
                     task = task,
                     onComplete = {
-                        if (!task.isCompleted) {
+                        if (!task.completed) {
                             taskToComplete = task
                             showCompleteDialog = true
                         }
@@ -232,13 +236,10 @@ fun TasksContent(
         }
     }
 
-
     if (showCompleteDialog) {
         ConfirmCompleteDialog(
             onConfirm = {
-                taskToComplete?.let { task ->
-                    onToggleComplete(task)
-                }
+                taskToComplete?.let { onToggleComplete(it) }
                 showCompleteDialog = false
                 taskToComplete = null
             },
@@ -248,7 +249,6 @@ fun TasksContent(
             }
         )
     }
-
 
     if (showDeleteDialog) {
         ConfirmDeleteDialog(
@@ -269,23 +269,25 @@ fun TasksContent(
 
 @Composable
 fun TaskItem(task: TaskData, onComplete: () -> Unit, onDelete: () -> Unit) {
-    val backgroundColor = if (task.isCompleted) {
+    val backgroundColor = if (task.completed) {
         Color(0xFF4CAF50).copy(alpha = 0.1f)
     } else {
         MaterialTheme.colorScheme.surface
     }
 
-    val borderColor = if (task.isCompleted) {
-        Color(0xFF4CAF50)
-    } else {
-        Color.Transparent
+    val borderColor = when {
+        task.completed -> Color(0xFF4CAF50)
+        task.priority.equals("BAIXA", ignoreCase = true) -> Color(0xFF2196F3)
+        task.priority.equals("MEDIA", ignoreCase = true) -> Color(0xFFFFC107)
+        task.priority.equals("ALTA", ignoreCase = true) -> Color(0xFFF44336)
+        else -> Color.Transparent
     }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .border(
-                width = if (task.isCompleted) 2.dp else 0.dp,
+                width = 2.dp,
                 color = borderColor,
                 shape = RoundedCornerShape(8.dp)
             ),
@@ -293,7 +295,9 @@ fun TaskItem(task: TaskData, onComplete: () -> Unit, onDelete: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -301,44 +305,43 @@ fun TaskItem(task: TaskData, onComplete: () -> Unit, onDelete: () -> Unit) {
                     text = task.title,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = if (task.isCompleted)
+                    color = if (task.completed) {
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    else
-                        MaterialTheme.colorScheme.onSurface,
-                    textDecoration = if (task.isCompleted)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    textDecoration = if (task.completed) {
                         androidx.compose.ui.text.style.TextDecoration.LineThrough
-                    else null
+                    } else null
                 )
+
                 task.description?.let {
                     Text(
                         text = it,
                         fontSize = 12.sp,
-                        color = if (task.isCompleted)
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        else
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }
+
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Matéria: ${task.subject}",
                     fontSize = 12.sp,
-                    color = if (task.isCompleted)
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    else
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = "Prioridade: ${task.priority}",
+                    fontSize = 12.sp,
+                    color = borderColor
                 )
                 Text(
                     text = "Prazo: ${task.dueDate}",
                     fontSize = 12.sp,
-                    color = if (task.isCompleted)
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    else
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
 
-            if (!task.isCompleted) {
+            if (!task.completed) {
                 Button(
                     onClick = onComplete,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
@@ -359,7 +362,7 @@ fun TaskItem(task: TaskData, onComplete: () -> Unit, onDelete: () -> Unit) {
                 Icon(
                     Icons.Default.Close,
                     contentDescription = "Excluir",
-                    tint = if (task.isCompleted)
+                    tint = if (task.completed)
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     else
                         MaterialTheme.colorScheme.error
@@ -368,6 +371,7 @@ fun TaskItem(task: TaskData, onComplete: () -> Unit, onDelete: () -> Unit) {
         }
     }
 }
+
 
 @Composable
 fun SubjectsContent(
@@ -465,18 +469,34 @@ fun NewTaskDialog(
     var dueDate by remember { mutableStateOf("") }
     var estimatedTime by remember { mutableStateOf("30") }
     var expanded by remember { mutableStateOf(false) }
+    var selectedPriority by remember { mutableStateOf("BAIXA") }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text("Nova Tarefa", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Título") }, modifier = Modifier.fillMaxWidth())
+
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Título") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Descrição") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descrição") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 Spacer(modifier = Modifier.height(12.dp))
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                     OutlinedTextField(
@@ -489,7 +509,10 @@ fun NewTaskDialog(
                             .fillMaxWidth()
                             .menuAnchor()
                     )
-                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
                         subjects.forEach { subject ->
                             DropdownMenuItem(
                                 text = { Text(subject) },
@@ -501,7 +524,44 @@ fun NewTaskDialog(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(12.dp))
+
+                // 🔥 NOVO BLOCO — seleção de prioridade
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Prioridade", fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(8.dp))
+                val priorities = listOf("BAIXA", "MEDIA", "ALTA")
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    priorities.forEach { priority ->
+                        val color = when (priority) {
+                            "BAIXA" -> Color(0xFF2196F3)
+                            "MEDIA" -> Color(0xFFFFC107)
+                            "ALTA" -> Color(0xFFF44336)
+                            else -> Color.Gray
+                        }
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .border(
+                                    width = if (selectedPriority == priority) 2.dp else 1.dp,
+                                    color = if (selectedPriority == priority) color else Color.Gray,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .background(
+                                    if (selectedPriority == priority)
+                                        color.copy(alpha = 0.2f)
+                                    else
+                                        Color.Transparent
+                                )
+                                .clickable { selectedPriority = priority }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text(priority, color = color, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
                 val context = LocalContext.current
                 val calendar = Calendar.getInstance()
                 val datePicker = remember {
@@ -523,9 +583,9 @@ fun NewTaskDialog(
                     readOnly = true,
                     modifier = Modifier.fillMaxWidth(),
                     interactionSource = remember { MutableInteractionSource() }
-                        .also { interactionSource ->
-                            LaunchedEffect(interactionSource) {
-                                interactionSource.interactions.collect {
+                        .also { source ->
+                            LaunchedEffect(source) {
+                                source.interactions.collect {
                                     if (it is PressInteraction.Release) {
                                         datePicker.show()
                                     }
@@ -533,11 +593,25 @@ fun NewTaskDialog(
                             }
                         }
                 )
+
                 Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(value = estimatedTime, onValueChange = { estimatedTime = it }, label = { Text("Tempo estimado (min)") })
+                OutlinedTextField(
+                    value = estimatedTime,
+                    onValueChange = { estimatedTime = it },
+                    label = { Text("Tempo estimado (min)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 Spacer(modifier = Modifier.height(24.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Cancelar") }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) { Text("Cancelar") }
+
                     Button(
                         onClick = {
                             if (title.isNotBlank() && selectedSubject.isNotBlank() && dueDate.isNotBlank()) {
@@ -548,7 +622,8 @@ fun NewTaskDialog(
                                     subject = selectedSubject,
                                     dueDate = dueDate,
                                     estimatedTime = estimatedTime,
-                                    isCompleted = false
+                                    completed = false,
+                                    priority = selectedPriority
                                 )
                                 onSave(newTask)
                             }
@@ -560,6 +635,7 @@ fun NewTaskDialog(
         }
     }
 }
+
 
 @Composable
 fun ConfirmDeleteDialog(
@@ -591,6 +667,45 @@ fun ConfirmDeleteDialog(
                 )
             ) {
                 Text("Excluir")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
+        shape = RoundedCornerShape(16.dp)
+    )
+}
+
+@Composable
+fun ConfirmCompleteDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Concluir Tarefa",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+        },
+        text = {
+            Text(
+                text = "Tem certeza que deseja marcar esta tarefa como concluída?",
+                fontSize = 16.sp
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4CAF50)
+                )
+            ) {
+                Text("Concluir")
             }
         },
         dismissButton = {
@@ -679,40 +794,4 @@ fun NewSubjectDialog(
             }
         }
     }
-}
-@Composable
-fun ConfirmCompleteDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Concluir Lição",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-        },
-        text = {
-            Text(
-                text = "Deseja marcar esta lição como concluída?",
-                fontSize = 16.sp
-            )
-        },
-        confirmButton = {
-            Button(
-                onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-            ) {
-                Text("Concluir")
-            }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        },
-        shape = RoundedCornerShape(16.dp)
-    )
 }

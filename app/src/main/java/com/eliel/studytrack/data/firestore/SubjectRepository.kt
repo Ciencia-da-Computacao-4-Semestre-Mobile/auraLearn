@@ -1,8 +1,10 @@
 package com.eliel.studytrack.data.firestore
 
 
+import android.annotation.SuppressLint
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestore.getInstance
 import kotlinx.coroutines.tasks.await
 
 data class SubjectData(
@@ -15,7 +17,8 @@ data class SubjectData(
 
 object SubjectRepository {
 
-    private val db = FirebaseFirestore.getInstance()
+    @SuppressLint("StaticFieldLeak")
+    private val db = getInstance()
     private val auth = FirebaseAuth.getInstance()
 
     private fun userSubjects() =

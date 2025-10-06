@@ -13,7 +13,7 @@ data class TaskData(
     val dueDate: String = "",
     val estimatedTime: String = "",
     val priority: String = "MEDIA",
-    val isCompleted: Boolean = false
+    val completed: Boolean = false
 )
 
 object TaskRepository {
@@ -34,8 +34,8 @@ object TaskRepository {
         return snapshot.toObjects(TaskData::class.java)
     }
 
-    suspend fun updateTaskStatus(id: String, isCompleted: Boolean) {
-        userTasks().document(id).update("isCompleted", isCompleted).await()
+    suspend fun updateTaskStatus(id: String, completed: Boolean) {
+        userTasks().document(id).update("completed", completed).await()
     }
 
     suspend fun deleteTask(id: String) {
