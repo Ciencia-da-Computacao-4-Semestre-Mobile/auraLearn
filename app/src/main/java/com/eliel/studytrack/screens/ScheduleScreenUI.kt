@@ -175,7 +175,9 @@ fun TasksContent(
     val subjectOptions = listOf("Todas") + subjects.map { it.name }
     var selectedSubjectFilter by remember { mutableStateOf("Todas") }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showCompleteDialog by remember { mutableStateOf(false) }
     var taskToDelete by remember { mutableStateOf<String?>(null) }
+    var taskToComplete by remember { mutableStateOf<TaskData?>(null) }
 
     val filteredTasks = tasks.filter {
         selectedSubjectFilter == "Todas" || it.subject == selectedSubjectFilter
@@ -193,9 +195,7 @@ fun TasksContent(
                 readOnly = true,
                 label = { Text("Filtrar por") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor()
+                modifier = Modifier.fillMaxWidth().menuAnchor()
             )
             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 subjectOptions.forEach { subject ->
@@ -216,7 +216,12 @@ fun TasksContent(
             items(filteredTasks) { task ->
                 TaskItem(
                     task = task,
-                    onToggle = { onToggleComplete(task) },
+                    onComplete = {
+                        if (!task.isCompleted) {
+                            taskToComplete = task
+                            showCompleteDialog = true
+                        }
+                    },
                     onDelete = {
                         taskToDelete = task.id
                         showDeleteDialog = true
@@ -226,6 +231,24 @@ fun TasksContent(
             }
         }
     }
+
+
+    if (showCompleteDialog) {
+        ConfirmCompleteDialog(
+            onConfirm = {
+                taskToComplete?.let { task ->
+                    onToggleComplete(task)
+                }
+                showCompleteDialog = false
+                taskToComplete = null
+            },
+            onDismiss = {
+                showCompleteDialog = false
+                taskToComplete = null
+            }
+        )
+    }
+
 
     if (showDeleteDialog) {
         ConfirmDeleteDialog(
@@ -245,15 +268,15 @@ fun TasksContent(
 }
 
 @Composable
-fun TaskItem(task: TaskData, onToggle: () -> Unit, onDelete: () -> Unit) {
+fun TaskItem(task: TaskData, onComplete: () -> Unit, onDelete: () -> Unit) {
     val backgroundColor = if (task.isCompleted) {
-        Color(0xFF4CAF50).copy(alpha = 0.1f) // Verde claro para tarefas concluídas
+        Color(0xFF4CAF50).copy(alpha = 0.1f)
     } else {
         MaterialTheme.colorScheme.surface
     }
 
     val borderColor = if (task.isCompleted) {
-        Color(0xFF4CAF50) // Verde para borda
+        Color(0xFF4CAF50)
     } else {
         Color.Transparent
     }
@@ -273,71 +296,73 @@ fun TaskItem(task: TaskData, onToggle: () -> Unit, onDelete: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Checkbox(
-                checked = task.isCompleted,
-                onCheckedChange = { onToggle() },
-                colors = CheckboxDefaults.colors(
-                    checkedColor = Color(0xFF4CAF50),
-                    uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            )
-            Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = task.title,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = if (task.isCompleted) {
+                    color = if (task.isCompleted)
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    textDecoration = if (task.isCompleted) {
+                    else
+                        MaterialTheme.colorScheme.onSurface,
+                    textDecoration = if (task.isCompleted)
                         androidx.compose.ui.text.style.TextDecoration.LineThrough
-                    } else {
-                        null
-                    }
+                    else null
                 )
                 task.description?.let {
                     Text(
                         text = it,
                         fontSize = 12.sp,
-                        color = if (task.isCompleted) {
+                        color = if (task.isCompleted)
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        } else {
+                        else
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        }
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Matéria: ${task.subject}",
                     fontSize = 12.sp,
-                    color = if (task.isCompleted) {
+                    color = if (task.isCompleted)
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    } else {
+                    else
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    }
                 )
                 Text(
                     text = "Prazo: ${task.dueDate}",
                     fontSize = 12.sp,
-                    color = if (task.isCompleted) {
+                    color = if (task.isCompleted)
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    } else {
+                    else
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    }
                 )
             }
+
+            if (!task.isCompleted) {
+                Button(
+                    onClick = onComplete,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Text("Concluir", color = Color.White)
+                }
+            } else {
+                Text(
+                    text = "✓ Concluída",
+                    color = Color(0xFF4CAF50),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
+
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Close,
                     contentDescription = "Excluir",
-                    tint = if (task.isCompleted) {
+                    tint = if (task.isCompleted)
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    } else {
+                    else
                         MaterialTheme.colorScheme.error
-                    }
                 )
             }
         }
@@ -654,4 +679,40 @@ fun NewSubjectDialog(
             }
         }
     }
+}
+@Composable
+fun ConfirmCompleteDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Concluir Lição",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+        },
+        text = {
+            Text(
+                text = "Deseja marcar esta lição como concluída?",
+                fontSize = 16.sp
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+            ) {
+                Text("Concluir")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
+        shape = RoundedCornerShape(16.dp)
+    )
 }
