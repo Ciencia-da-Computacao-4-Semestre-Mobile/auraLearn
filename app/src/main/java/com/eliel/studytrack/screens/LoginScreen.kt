@@ -51,7 +51,7 @@ fun LoginScreen(
                     return@rememberLauncherForActivityResult
                 }
                 googleLoading = true
-                GoogleAuthHelper.firebaseAuthWithGoogle(idToken) { success, msg ->
+                viewModel.signInWithGoogle(idToken) { success, msg ->
                     googleLoading = false
                     if (success) {
                         navController.navigate("home") {

@@ -525,7 +525,7 @@ fun NewTaskDialog(
                     }
                 }
 
-                // 🔥 NOVO BLOCO — seleção de prioridade
+
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Prioridade", fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(8.dp))

@@ -10,7 +10,7 @@ class AuthViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
 
-    // 🔹 Cadastro com email/senha + criação do documento no Firestore
+
     fun registerUser(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
@@ -38,7 +38,7 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    // 🔹 Login com email e senha
+
     fun loginUser(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
@@ -47,7 +47,7 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    // 🔹 Login com Google (usa o helper e cria usuário no Firestore, se não existir)
+
     fun signInWithGoogle(idToken: String, onResult: (Boolean, String?) -> Unit) {
         GoogleAuthHelper.firebaseAuthWithGoogle(idToken) { success, message ->
             if (success) {
@@ -55,7 +55,7 @@ class AuthViewModel : ViewModel() {
                 if (user != null) {
                     viewModelScope.launch {
                         try {
-                            // Tenta buscar usuário existente
+
                             val existingUser = UserRepository.getCurrentUser()
                             if (existingUser == null) {
                                 UserRepository.createUser(
