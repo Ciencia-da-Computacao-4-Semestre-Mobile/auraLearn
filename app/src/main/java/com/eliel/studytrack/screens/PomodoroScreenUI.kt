@@ -27,7 +27,7 @@ enum class TimerState {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PomodoroScreenUI(navController: NavHostController) {
-    val initialPomodoroTime = DataSource.pomodoroTime.value * 60 // Converter para segundos
+    val initialPomodoroTime = DataSource.pomodoroTime.value * 60
     var timeRemaining by remember { mutableStateOf(initialPomodoroTime) }
     var timerState by remember { mutableStateOf(TimerState.STOPPED) }
 

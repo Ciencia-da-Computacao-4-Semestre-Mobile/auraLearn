@@ -4,29 +4,44 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eliel.studytrack.data.firestore.UserRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
 
-
-    fun registerUser(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+    fun registerUser(
+        email: String,
+        password: String,
+        name: String,
+        onResult: (Boolean, String?) -> Unit
+    ) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = auth.currentUser
                     if (user != null) {
-                        viewModelScope.launch {
-                            try {
-                                UserRepository.createUser(
-                                    uid = user.uid,
-                                    name = user.displayName ?: email.substringBefore("@"),
-                                    email = email
-                                )
-                                onResult(true, null)
-                            } catch (e: Exception) {
-                                onResult(false, e.message)
+                        val profileUpdates = userProfileChangeRequest {
+                            displayName = name
+                        }
+
+                        user.updateProfile(profileUpdates).addOnCompleteListener { updateTask ->
+                            if (updateTask.isSuccessful) {
+                                viewModelScope.launch {
+                                    try {
+                                        UserRepository.createUser(
+                                            uid = user.uid,
+                                            name = name,
+                                            email = email
+                                        )
+                                        onResult(true, null)
+                                    } catch (e: Exception) {
+                                        onResult(false, e.message)
+                                    }
+                                }
+                            } else {
+                                onResult(false, "Erro ao atualizar perfil")
                             }
                         }
                     } else {
@@ -38,7 +53,6 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-
     fun loginUser(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
@@ -47,7 +61,6 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-
     fun signInWithGoogle(idToken: String, onResult: (Boolean, String?) -> Unit) {
         GoogleAuthHelper.firebaseAuthWithGoogle(idToken) { success, message ->
             if (success) {
@@ -55,7 +68,6 @@ class AuthViewModel : ViewModel() {
                 if (user != null) {
                     viewModelScope.launch {
                         try {
-
                             val existingUser = UserRepository.getCurrentUser()
                             if (existingUser == null) {
                                 UserRepository.createUser(

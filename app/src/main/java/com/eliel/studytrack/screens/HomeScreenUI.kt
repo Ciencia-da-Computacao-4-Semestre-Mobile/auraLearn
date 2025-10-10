@@ -63,7 +63,7 @@ fun HomeScreenUI(navController: NavHostController) {
     val upcomingTasks = remember(tasks) {
         tasks.filter { !it.completed && it.dueDate.isNotBlank() }
             .sortedBy { parseDueDateToMillis(it.dueDate) ?: Long.MAX_VALUE }
-            .take(2)
+            .take(3)
     }
 
     val greeting = remember {

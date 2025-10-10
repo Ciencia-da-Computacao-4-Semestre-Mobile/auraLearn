@@ -23,7 +23,7 @@ import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun RegisterScreen(
-    activity: Activity, // Recebe a activity diretamente
+    activity: Activity,
     navController: NavHostController,
     viewModel: AuthViewModel = viewModel()
 ) {
@@ -123,14 +123,21 @@ fun RegisterScreen(
 
         Button(
             onClick = {
-                if (password == confirmPassword) {
-                    loading = true
-                    viewModel.registerUser(email, password) { success, message ->
-                        loading = false
-                        if (success) navController.popBackStack()
-                        else errorMessage = message
+                when {
+                    name.isBlank() -> errorMessage = "Por favor, insira seu nome"
+                    email.isBlank() -> errorMessage = "Por favor, insira seu email"
+                    password.isBlank() -> errorMessage = "Por favor, insira sua senha"
+                    password != confirmPassword -> errorMessage = "As senhas não coincidem"
+                    password.length < 6 -> errorMessage = "A senha deve ter pelo menos 6 caracteres"
+                    else -> {
+                        loading = true
+                        viewModel.registerUser(email, password, name) { success, message ->
+                            loading = false
+                            if (success) navController.popBackStack()
+                            else errorMessage = message
+                        }
                     }
-                } else errorMessage = "As senhas não coincidem"
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
@@ -139,7 +146,6 @@ fun RegisterScreen(
         }
 
         Spacer(Modifier.height(16.dp))
-
 
         OutlinedButton(
             onClick = {
