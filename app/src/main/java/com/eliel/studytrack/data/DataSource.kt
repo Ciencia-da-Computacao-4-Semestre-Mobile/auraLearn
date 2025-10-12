@@ -134,7 +134,7 @@ object DataSource {
     val totalCompletedTasks = mutableStateOf(0)
     val weeklyProgress = mutableStateOf("0h0m")
     val totalStudySessions = mutableStateOf(2)
-    val dailyGoalAverage = mutableStateOf("35") // Changed to a simple string representing minutes
+    val dailyGoalAverage = mutableStateOf("35")
     val weeklyGoal = mutableStateOf("14h")
     val weeklyGoalProgress = mutableStateOf("0h0m esta semana")
 
@@ -144,7 +144,7 @@ object DataSource {
     val pomodoroTime = mutableStateOf(25)
     val shortBreakTime = mutableStateOf(5)
     val longBreakTime = mutableStateOf(15)
-    val dailyStudyGoalSessions = mutableStateOf(4) // Alterado para sessões
+    val dailyStudyGoalSessions = mutableStateOf(4)
 
     val studyRemindersEnabled = mutableStateOf(true)
     val taskDeadlinesEnabled = mutableStateOf(true)
