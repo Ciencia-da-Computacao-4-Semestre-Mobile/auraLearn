@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -21,6 +20,9 @@ import com.eliel.studytrack.data.firestore.UserData
 import com.eliel.studytrack.data.firestore.UserRepository
 import com.eliel.studytrack.auth.AuthViewModel
 import kotlinx.coroutines.launch
+import com.eliel.studytrack.ui.theme.ThemeController
+import androidx.compose.ui.graphics.Color
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +33,7 @@ fun SettingsScreenUI(
     val scope = rememberCoroutineScope()
     var userData by remember { mutableStateOf<UserData?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+
 
     val pomodoroTime = remember { mutableStateOf(25) }
     val shortBreakTime = remember { mutableStateOf(5) }
@@ -43,6 +46,7 @@ fun SettingsScreenUI(
     val dailySummaryEnabled = remember { mutableStateOf(false) }
 
     val appTheme = remember { mutableStateOf("Claro") }
+
 
     LaunchedEffect(Unit) {
         scope.launch {
@@ -58,18 +62,20 @@ fun SettingsScreenUI(
         return
     }
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF7F7F7))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
 
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE7F6)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             elevation = CardDefaults.cardElevation(4.dp)
         ) {
             Row(
@@ -79,7 +85,7 @@ fun SettingsScreenUI(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_account),
                     contentDescription = null,
-                    tint = Color(0xFF6200EE),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(56.dp)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
@@ -87,17 +93,18 @@ fun SettingsScreenUI(
                     Text(
                         userData?.name ?: "Usuário",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
                         userData?.email ?: "email@exemplo.com",
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
                     )
                     Text(
                         "Plano: ${userData?.plan ?: "Gratuito"}",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
                     )
                 }
             }
@@ -105,13 +112,17 @@ fun SettingsScreenUI(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+
         SectionCard(
             iconId = R.drawable.ic_timer,
-            iconTint = Color(0xFFFF5252),
+            iconTint = MaterialTheme.colorScheme.error, // destaque com cor de erro (ou primary se preferir)
             title = "Timer Pomodoro"
         ) {
             Column {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     TimeDropdown(
                         label = "Tempo de Estudo (min)",
                         options = listOf(20, 25, 30, 35, 40),
@@ -127,7 +138,10 @@ fun SettingsScreenUI(
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     TimeDropdown(
                         label = "Pausa Longa (min)",
                         options = listOf(15, 20, 25, 30),
@@ -148,9 +162,10 @@ fun SettingsScreenUI(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+
         SectionCard(
             iconId = R.drawable.ic_notifications,
-            iconTint = Color(0xFF4CAF50),
+            iconTint = MaterialTheme.colorScheme.primary,
             title = "Notificações"
         ) {
             SettingSwitch("Lembretes de estudo", studyRemindersEnabled)
@@ -169,12 +184,12 @@ fun SettingsScreenUI(
 
         SectionCard(
             iconId = R.drawable.ic_info,
-            iconTint = Color(0xFF0288D1),
+            iconTint = MaterialTheme.colorScheme.primary,
             title = "Sobre o App"
         ) {
-            Text("Versão: 1.0.0", fontSize = 14.sp)
-            Text("Última atualização: 04/10/2025", fontSize = 14.sp)
-            Text("Desenvolvido por Eliel", fontSize = 14.sp, color = Color.Gray)
+            Text("Versão: 1.0.0", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+            Text("Última atualização: 04/10/2025", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+            Text("Desenvolvido por Eliel", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -184,7 +199,10 @@ fun SettingsScreenUI(
             onClick = { navController.navigate(Screen.Premium.route) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700))
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFFD700),
+                contentColor = Color.Black
+            )
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_crown),
@@ -195,8 +213,6 @@ fun SettingsScreenUI(
             Text("Assine o Premium", color = Color.Black, fontWeight = FontWeight.Bold)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         OutlinedButton(
             onClick = {
                 viewModel.logout()
@@ -206,19 +222,19 @@ fun SettingsScreenUI(
             },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
             border = ButtonDefaults.outlinedButtonBorder.copy(
                 width = 1.dp,
-                brush = androidx.compose.ui.graphics.SolidColor(Color.Red)
+                brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.error)
             )
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_exit),
                 contentDescription = null,
-                tint = Color.Red
+                tint = MaterialTheme.colorScheme.error
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Sair da Conta", color = Color.Red)
+            Text("Sair da Conta", color = MaterialTheme.colorScheme.error)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -226,17 +242,18 @@ fun SettingsScreenUI(
 }
 
 
+
 @Composable
 fun SectionCard(
     iconId: Int,
-    iconTint: Color,
+    iconTint: androidx.compose.ui.graphics.Color,
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFDFDFD)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(3.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -247,7 +264,7 @@ fun SectionCard(
                     tint = iconTint
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             }
             Spacer(modifier = Modifier.height(12.dp))
             content()
@@ -262,14 +279,29 @@ fun SettingSwitch(label: String, state: MutableState<Boolean>) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, fontSize = 14.sp)
-        Switch(checked = state.value, onCheckedChange = { state.value = it })
+        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+        Switch(
+            checked = state.value,
+            onCheckedChange = { state.value = it },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f),
+                uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                uncheckedTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+            )
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimeDropdown(label: String, options: List<Int>, value: MutableState<Int>, modifier: Modifier = Modifier, isSession: Boolean = false) {
+fun TimeDropdown(
+    label: String,
+    options: List<Int>,
+    value: MutableState<Int>,
+    modifier: Modifier = Modifier,
+    isSession: Boolean = false
+) {
     var expanded by remember { mutableStateOf(false) }
 
     Column(modifier = modifier) {
@@ -289,13 +321,15 @@ fun TimeDropdown(label: String, options: List<Int>, value: MutableState<Int>, mo
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 options.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(if (isSession) "$option sessões" else "$option minutos") },
+                        text = { Text(if (isSession) "$option sessões" else "$option minutos", color = MaterialTheme.colorScheme.onSurface) },
                         onClick = {
                             value.value = option
                             expanded = false
@@ -309,12 +343,12 @@ fun TimeDropdown(label: String, options: List<Int>, value: MutableState<Int>, mo
 
 @Composable
 fun AppearanceSection(appTheme: MutableState<String>) {
-    val isDarkMode = appTheme.value == "Escuro"
+    val isDark = remember { mutableStateOf(ThemeController.isDarkMode?.invoke() ?: false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFDFDFD)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(3.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -322,13 +356,14 @@ fun AppearanceSection(appTheme: MutableState<String>) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_palette),
                     contentDescription = null,
-                    tint = Color(0xFF7E57C2)
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Aparência",
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -340,28 +375,29 @@ fun AppearanceSection(appTheme: MutableState<String>) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("Modo Escuro", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Modo Escuro", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                     Text(
                         "Interface escura para estudos noturnos",
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }
 
                 Switch(
-                    checked = isDarkMode,
+                    checked = isDark.value,
                     onCheckedChange = {
+                        isDark.value = it
                         appTheme.value = if (it) "Escuro" else "Claro"
-                    }
+                        ThemeController.toggleTheme?.invoke()
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.primary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f),
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        uncheckedTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                    )
                 )
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                "* Disponível na versão Premium",
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
         }
     }
 }

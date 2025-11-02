@@ -6,12 +6,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.eliel.studytrack.components.BottomNavigationBar
 import com.eliel.studytrack.ui.theme.StudyTrackTheme
+import com.eliel.studytrack.ui.theme.ThemeController
 import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
@@ -20,7 +21,12 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
 
         setContent {
-            StudyTrackTheme {
+            var isDarkTheme by remember { mutableStateOf(false) }
+
+            ThemeController.toggleTheme = { isDarkTheme = !isDarkTheme }
+            ThemeController.isDarkMode = { isDarkTheme }
+
+            StudyTrackTheme(darkTheme = isDarkTheme) {
                 val navController = rememberNavController()
                 val activity: Activity = this@MainActivity
 
