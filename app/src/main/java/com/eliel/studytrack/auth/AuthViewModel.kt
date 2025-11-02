@@ -60,7 +60,21 @@ class AuthViewModel : ViewModel() {
                 else onResult(false, task.exception?.message)
             }
     }
+    fun resetPassword(email: String, callback: (Boolean, String) -> Unit) {
+        if (email.isBlank()) {
+            callback(false, "Por favor, insira um email válido.")
+            return
+        }
 
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    callback(true, "Um link para redefinir sua senha foi enviado para $email.")
+                } else {
+                    callback(false, task.exception?.message ?: "Falha ao enviar e-mail.")
+                }
+            }
+    }
     fun signInWithGoogle(idToken: String, onResult: (Boolean, String?) -> Unit) {
         GoogleAuthHelper.firebaseAuthWithGoogle(idToken) { success, message ->
             if (success) {

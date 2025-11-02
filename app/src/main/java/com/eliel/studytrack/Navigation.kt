@@ -23,7 +23,9 @@ fun StudyTrackNavHost(
         composable("register") {
             RegisterScreen(navController = navController, activity = activity) //
         }
-
+        composable("forgot_password") {
+            ForgotPasswordScreen(navController)
+        }
         composable(Screen.Home.route) { HomeScreenUI(navController) }
         composable(Screen.Schedule.route) { ScheduleScreen(navController) }
         composable(Screen.Pomodoro.route) { PomodoroScreen(navController) }

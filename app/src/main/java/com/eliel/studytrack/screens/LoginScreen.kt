@@ -142,9 +142,12 @@ fun LoginScreen(
             Spacer(Modifier.width(8.dp))
             Text(if (googleLoading) "Carregando..." else "Entrar com Google")
         }
+        Spacer(Modifier.height(8.dp))
 
+        TextButton(onClick = { navController.navigate("forgot_password") }) {
+            Text("Esqueceu a senha?")
+        }
         Spacer(Modifier.height(16.dp))
-
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
