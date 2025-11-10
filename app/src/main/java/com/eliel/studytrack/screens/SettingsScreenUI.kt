@@ -18,6 +18,7 @@ import com.eliel.studytrack.R
 import com.eliel.studytrack.Screen
 import com.eliel.studytrack.data.firestore.UserData
 import com.eliel.studytrack.data.firestore.UserRepository
+import com.eliel.studytrack.data.DataSource
 import com.eliel.studytrack.auth.AuthViewModel
 import kotlinx.coroutines.launch
 import com.eliel.studytrack.ui.theme.ThemeController
@@ -35,9 +36,11 @@ fun SettingsScreenUI(
     var isLoading by remember { mutableStateOf(true) }
 
 
-    val pomodoroTime = remember { mutableStateOf(25) }
-    val shortBreakTime = remember { mutableStateOf(5) }
-    val longBreakTime = remember { mutableStateOf(15) }
+    val pomodoroTime = DataSource.pomodoroTime
+    val shortBreakTime = DataSource.shortBreakTime
+    val longBreakTime = DataSource.longBreakTime
+
+
     val dailyStudyGoalSessions = remember { mutableStateOf(4) }
 
     val studyRemindersEnabled = remember { mutableStateOf(true) }

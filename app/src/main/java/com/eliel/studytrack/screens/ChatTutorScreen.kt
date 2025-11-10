@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,16 +14,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.eliel.studytrack.R
+import com.eliel.studytrack.data.ChatTutorUiState
+import com.eliel.studytrack.data.ChatTutorViewModel
+import kotlinx.coroutines.launch
 
 data class ChatMessage(val text: String, val isUser: Boolean)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatTutorScreen(navController: NavHostController) {
+fun ChatTutorScreen(
+    navController: NavHostController,
+    chatViewModel: ChatTutorViewModel = viewModel()
+) {
     var userInput by remember { mutableStateOf(TextFieldValue("")) }
     var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
+
+    val chatUiState by chatViewModel.uiState.collectAsState()
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -40,7 +52,6 @@ fun ChatTutorScreen(navController: NavHostController) {
             )
         }
     ) { innerPadding ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -49,8 +60,9 @@ fun ChatTutorScreen(navController: NavHostController) {
                 .padding(16.dp)
         ) {
 
-
+            // Lista de mensagens
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -88,7 +100,10 @@ fun ChatTutorScreen(navController: NavHostController) {
                             ) {
                                 Text(
                                     text = message.text,
-                                    color = if (message.isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    color = if (message.isUser)
+                                        MaterialTheme.colorScheme.onPrimary
+                                    else
+                                        MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.padding(12.dp)
                                 )
                             }
@@ -110,7 +125,8 @@ fun ChatTutorScreen(navController: NavHostController) {
                         modifier = Modifier
                             .size(40.dp)
                             .background(
-                                color = if (userInput.text.isNotBlank()) Color.Black else Color.Gray.copy(alpha = 0.3f),
+                                color = if (userInput.text.isNotBlank()) Color.Black
+                                else Color.Gray.copy(alpha = 0.3f),
                                 shape = RoundedCornerShape(50)
                             ),
                         contentAlignment = Alignment.Center
@@ -118,8 +134,10 @@ fun ChatTutorScreen(navController: NavHostController) {
                         IconButton(
                             onClick = {
                                 if (userInput.text.isNotBlank()) {
-                                    messages = messages + ChatMessage(userInput.text, isUser = true)
+                                    val question = userInput.text
+                                    messages = messages + ChatMessage(question, isUser = true)
                                     userInput = TextFieldValue("")
+                                    chatViewModel.sendMessage(question)
                                 }
                             },
                             enabled = userInput.text.isNotBlank(),
@@ -136,6 +154,34 @@ fun ChatTutorScreen(navController: NavHostController) {
                 singleLine = true,
                 shape = RoundedCornerShape(24.dp)
             )
+        }
+
+
+        LaunchedEffect(chatUiState) {
+            when (val state = chatUiState) {
+                is ChatTutorUiState.Loading -> {
+                    messages = messages + ChatMessage("Pensando...", isUser = false)
+                }
+                is ChatTutorUiState.Success -> {
+
+                    messages = messages.filterNot { it.text == "Pensando..." } +
+                            ChatMessage(state.answer, isUser = false)
+                }
+                is ChatTutorUiState.Error -> {
+                    messages = messages.filterNot { it.text == "Pensando..." } +
+                            ChatMessage("Erro: ${state.error}", isUser = false)
+                }
+                else -> {}
+            }
+        }
+
+
+        LaunchedEffect(messages) {
+            if (messages.isNotEmpty()) {
+                coroutineScope.launch {
+                    listState.animateScrollToItem(messages.lastIndex)
+                }
+            }
         }
     }
 }
