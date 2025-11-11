@@ -1,15 +1,18 @@
 package com.eliel.studytrack.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.eliel.studytrack.R
 import com.eliel.studytrack.auth.AuthViewModel
 
 @Composable
@@ -28,8 +31,14 @@ fun ForgotPasswordScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Redefinir senha", style = MaterialTheme.typography.headlineMedium)
-        Spacer(Modifier.height(24.dp))
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Logo",
+            modifier = Modifier.size(150.dp)
+        )
+        Spacer(Modifier.height(16.dp))
+        Text("Recuperar senha", style = MaterialTheme.typography.headlineMedium)
+        Spacer(Modifier.height(16.dp))
 
         TextField(
             value = email,

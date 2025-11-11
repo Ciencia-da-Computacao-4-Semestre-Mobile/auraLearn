@@ -80,8 +80,15 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Aura Learn", style = MaterialTheme.typography.headlineMedium)
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Logo",
+            modifier = Modifier.size(150.dp)
+        )
         Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(16.dp))
+        Text("Login", style = MaterialTheme.typography.headlineMedium)
+        Spacer(Modifier.height(16.dp))
 
         TextField(
             value = email,

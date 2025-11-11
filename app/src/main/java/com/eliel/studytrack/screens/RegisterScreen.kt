@@ -80,8 +80,14 @@ fun RegisterScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Logo",
+            modifier = Modifier.size(150.dp)
+        )
+        Spacer(Modifier.height(16.dp))
         Text("Cadastro", style = MaterialTheme.typography.headlineMedium)
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
 
         TextField(
             value = name,
