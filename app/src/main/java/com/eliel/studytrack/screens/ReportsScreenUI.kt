@@ -96,10 +96,6 @@ fun ReportsScreenUI(navController: NavHostController) {
                 Spacer(modifier = Modifier.height(16.dp))
                 PerformanceByDayOfWeekContent()
                 Spacer(modifier = Modifier.height(24.dp))
-
-
-                RecentAchievementsContent(navController = navController)
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
@@ -199,64 +195,6 @@ fun PerformanceByDayOfWeekContent() {
         }
     }
 }
-
-@Composable
-fun RecentAchievementsContent(navController: NavHostController) {
-    val achievements = DataSource.achievements.filter { it.isUnlocked }.take(3)
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFC107))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(id = R.drawable.ic_trophy_fill), contentDescription = "Conquistas Recentes", tint = Color.White, modifier = Modifier.size(24.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Conquistas Recentes", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.White)
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (achievements.isEmpty()) {
-                Text("Nenhuma conquista recente.", color = Color.White.copy(alpha = 0.7f))
-            } else {
-                achievements.forEach { achievement ->
-                    AchievementDisplayItem(achievement = achievement)
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-
-
-            TextButton(
-                onClick = { navController.navigate("achievements_list") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Ver todas as conquistas", color = Color.White, fontWeight = FontWeight.Bold)
-                Icon(Icons.Default.ArrowForward, contentDescription = "Ver todas", tint = Color.White)
-            }
-        }
-    }
-}
-
-@Composable
-fun AchievementDisplayItem(achievement: Achievement) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(painterResource(id = R.drawable.ic_trophy), contentDescription = "Conquista", tint = Color.White, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(text = achievement.title, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = Color.White)
-                Text(text = achievement.description, fontSize = 12.sp, color = Color.White.copy(alpha = 0.7f))
-            }
-        }
-        Text(text = "+${achievement.points}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
-    }
-}
-
 
 val Subject.completionPercentage: Int
     get() = (Math.random() * 100).toInt()

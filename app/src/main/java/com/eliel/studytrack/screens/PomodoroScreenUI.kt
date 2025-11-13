@@ -19,7 +19,6 @@ import androidx.navigation.NavHostController
 import com.eliel.studytrack.R
 import com.eliel.studytrack.data.DataSource
 import kotlinx.coroutines.delay
-
 enum class TimerState {
     STOPPED, RUNNING, PAUSED
 }

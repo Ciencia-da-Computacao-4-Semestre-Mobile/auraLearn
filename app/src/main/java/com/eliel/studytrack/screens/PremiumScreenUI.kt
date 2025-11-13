@@ -8,7 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,6 +21,29 @@ import com.eliel.studytrack.R
 
 @Composable
 fun PremiumScreenUI(navController: NavHostController) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Inscrição em Breve") },
+            text = { Text("Estamos trabalhando para trazer os melhores recursos para você. A opção de assinatura estará disponível em breve!") },
+            confirmButton = {
+                Button(
+                    onClick = { showDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                ) {
+                    Text("Entendido")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Fechar")
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -35,7 +58,6 @@ fun PremiumScreenUI(navController: NavHostController) {
             contentAlignment = Alignment.TopEnd
         ) {
             IconButton(onClick = {
-
                 navController.popBackStack(route = "home", inclusive = false)
             }) {
                 Icon(
@@ -46,7 +68,6 @@ fun PremiumScreenUI(navController: NavHostController) {
                 )
             }
         }
-
 
         Text(
             text = "Assine o Premium",
@@ -62,13 +83,15 @@ fun PremiumScreenUI(navController: NavHostController) {
         PlanCard(
             title = "Plano Mensal",
             price = "R$ 9,90/mês",
-            features = listOf("Acesso total a todos os recursos", "Cancelamento a qualquer momento")
+            features = listOf("Acesso total a todos os recursos", "Cancelamento a qualquer momento"),
+            onSubscribeClick = { showDialog = true }
         )
         Spacer(modifier = Modifier.height(16.dp))
         PlanCard(
             title = "Plano Anual",
             price = "R$ 99,90/ano",
-            features = listOf("Economize 15%", "Acesso total a todos os recursos")
+            features = listOf("Economize 15%", "Acesso total a todos os recursos"),
+            onSubscribeClick = { showDialog = true }
         )
     }
 }
@@ -90,7 +113,7 @@ fun PremiumFeatureItem(text: String) {
 }
 
 @Composable
-fun PlanCard(title: String, price: String, features: List<String>) {
+fun PlanCard(title: String, price: String, features: List<String>, onSubscribeClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -131,7 +154,7 @@ fun PlanCard(title: String, price: String, features: List<String>) {
             }
             Spacer(modifier = Modifier.height(12.dp))
             Button(
-                onClick = { /* ação de assinatura */ },
+                onClick = onSubscribeClick,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Assinar")
