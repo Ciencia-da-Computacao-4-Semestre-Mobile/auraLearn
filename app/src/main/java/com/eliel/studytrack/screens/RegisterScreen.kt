@@ -139,8 +139,13 @@ fun RegisterScreen(
                         loading = true
                         viewModel.registerUser(email, password, name) { success, message ->
                             loading = false
-                            if (success) navController.popBackStack()
-                            else errorMessage = message
+                            if (success) {
+                                navController.navigate("home") {
+                                    popUpTo("register") { inclusive = true }
+                                }
+                            } else {
+                                errorMessage = message
+                            }
                         }
                     }
                 }
@@ -150,6 +155,7 @@ fun RegisterScreen(
         ) {
             Text(if (loading) "Cadastrando..." else "Cadastrar")
         }
+
 
         Spacer(Modifier.height(16.dp))
 
