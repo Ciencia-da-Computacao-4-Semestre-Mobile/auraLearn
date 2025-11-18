@@ -154,6 +154,5 @@ dependencies {
     implementation(platform("org.jacoco:org.jacoco.core:0.8.11"))
     androidTestImplementation("com.google.android.gms:play-services-tasks:18.0.2")
     testImplementation("com.google.android.gms:play-services-tasks:18.0.2")
-    // ... existing code ...
-
+    testImplementation("org.robolectric:robolectric:4.11.1")
 }

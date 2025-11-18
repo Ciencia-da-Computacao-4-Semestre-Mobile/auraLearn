@@ -16,7 +16,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.mockito.MockedStatic
 import com.google.android.gms.tasks.Tasks
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28])
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
 
@@ -111,43 +116,63 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun `loginUser - sucesso`() {
+    fun `loginUser - sucesso`() = runTest {
         whenever(auth.signInWithEmailAndPassword(any(), any()))
             .thenReturn(Tasks.forResult(mock(AuthResult::class.java)))
 
         var result = false
-        viewModel.loginUser("a@a.com", "123456") { success, _ ->
-            result = success
-        }
-
-        assertThat(result).isTrue()
-    }
-
-    @Test
-    fun `loginUser - erro`() {
-        whenever(auth.signInWithEmailAndPassword(any(), any()))
-            .thenReturn(Tasks.forException(Exception("Senha incorreta")))
-
         var message: String? = null
-        viewModel.loginUser("a@a.com", "123456") { _, msg ->
+
+
+        viewModel.loginUser("a@a.com", "123456") { success, msg ->
+            result = success
             message = msg
         }
 
-        assertThat(message).isEqualTo("Senha incorreta.")
+        advanceUntilIdle()
+        assertThat(result).isTrue()
+        assertThat(message).isNull()
     }
 
+
     @Test
-    fun `resetPassword - envia email`() {
+    fun `loginUser - erro`() = runTest {
+        val exception = FirebaseAuthInvalidCredentialsException("ERROR_WRONG_PASSWORD", "Senha incorreta")
+        whenever(auth.signInWithEmailAndPassword(any(), any()))
+            .thenReturn(Tasks.forException(exception))
+
+        var result = true
+        var message: String? = null
+
+        viewModel.loginUser("a@a.com", "123456") { success, msg ->
+            result = success
+            message = msg
+        }
+
+        advanceUntilIdle()
+
+        assertThat(result).isFalse()
+        assertThat(message).isEqualTo("Senha incorreta.")
+    }
+    @Test
+    fun `resetPassword - envia email`() = runTest {
         whenever(auth.sendPasswordResetEmail(any()))
             .thenReturn(Tasks.forResult(null))
 
         var result = false
-        viewModel.resetPassword("a@a.com") { success, _ ->
+        var message: String? = null
+
+        viewModel.resetPassword("a@a.com") { success, msg ->
             result = success
+            message = msg
         }
 
+        advanceUntilIdle()
+
         assertThat(result).isTrue()
+        assertThat(message).isNull()
     }
+
 
     @Test
     fun `logout chama signOut`() {
