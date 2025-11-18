@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+    id("jacoco")
 }
 
 android {
@@ -27,6 +28,9 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isTestCoverageEnabled = true
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -38,6 +42,64 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/*.kotlin_module",
+                "META-INF/LICENSE-notice.md"
+            )
+        }
+    }
+}
+tasks.withType<Test>().configureEach {
+    configure<JacocoTaskExtension> {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
+}
+val coverageReportDir = layout.buildDirectory.dir("reports/jacoco/coverageReport")
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+        html.outputLocation.set(coverageReportDir)
+    }
+    dependsOn("testDebugUnitTest", "createDebugCoverageReport")
+
+    // 1. OBTÉM OS ARQUIVOS DE EXECUÇÃO (.exec e .ec)
+    executionData.setFrom(
+        fileTree(project.buildDir) {
+            include("jacoco/testDebugUnitTest.exec")
+            include("outputs/code_coverage/debugAndroidTest/code-coverage.ec")
+        }
+    )
+    val fileFilter = setOf(
+        "**/R.class", "**/R\$*.class", "**/BuildConfig.*", "**/Manifest*.*",
+        "**/*Args.class", "**/*Module.class", "**/*Dagger*.class",
+        "**/*Hilt*.class", "**/*_Factory.class", "**/*_MembersInjector.class",
+        "**/*_Provide*.class", "**/*Test*", "**/*_Impl*",
+        "**/*Activity*", "**/*Fragment*", "**/*View*", "**/*Binding*",
+        "**/*ComposableSingletons*", "**/*Compose*Kt.class"
+    )
+    val debugTree = fileTree("${project.buildDir}/intermediates/classes/debug") {
+        exclude(fileFilter)
+    }
+
+    classDirectories.setFrom(debugTree)
+    sourceDirectories.setFrom(
+        files(
+            "${project.projectDir}/src/main/java",
+            "${project.projectDir}/src/main/kotlin"
+        )
+    )
 }
 
 dependencies {
@@ -71,4 +133,24 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation(libs.firebase.ai)
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("com.google.truth:truth:1.1.5")
+    testImplementation("io.mockk:mockk:1.13.12")
+    androidTestImplementation("androidx.test:core:1.5.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    androidTestImplementation("com.google.truth:truth:1.1.5")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    androidTestImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    androidTestImplementation("io.mockk:mockk-android:1.13.12")
+    androidTestImplementation("com.google.firebase:firebase-firestore:25.0.0")
+    testImplementation("io.mockk:mockk:1.13.5")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    implementation(platform("org.jacoco:org.jacoco.core:0.8.11"))
+
 }
