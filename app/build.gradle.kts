@@ -152,5 +152,8 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.5")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     implementation(platform("org.jacoco:org.jacoco.core:0.8.11"))
+    androidTestImplementation("com.google.android.gms:play-services-tasks:18.0.2")
+    testImplementation("com.google.android.gms:play-services-tasks:18.0.2")
+    // ... existing code ...
 
 }

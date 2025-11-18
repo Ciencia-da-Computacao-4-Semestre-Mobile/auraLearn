@@ -15,6 +15,7 @@ import org.mockito.kotlin.whenever
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.mockito.MockedStatic
+import com.google.android.gms.tasks.Tasks
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
@@ -79,19 +80,16 @@ class AuthViewModelTest {
 
     @Test
     fun `registerUser - sucesso`() = runTest {
-        val taskMock = mock(AuthResult::class.java)
         val firebaseUser = mock(FirebaseUser::class.java)
 
         whenever(auth.createUserWithEmailAndPassword(any(), any()))
-            .thenReturn(successTask(taskMock))
+            .thenReturn(Tasks.forResult(mock(AuthResult::class.java)))
 
         whenever(auth.currentUser).thenReturn(firebaseUser)
         whenever(firebaseUser.updateProfile(any()))
-            .thenReturn(successVoidTask())
-
+            .thenReturn(Tasks.forResult(null))
 
         userRepoStatic = mockStatic(UserRepository::class.java)
-
         userRepoStatic!!.`when`<Any?> {
             runBlocking {
                 UserRepository.createUser(
@@ -115,7 +113,7 @@ class AuthViewModelTest {
     @Test
     fun `loginUser - sucesso`() {
         whenever(auth.signInWithEmailAndPassword(any(), any()))
-            .thenReturn(successTask(mock()))
+            .thenReturn(Tasks.forResult(mock(AuthResult::class.java)))
 
         var result = false
         viewModel.loginUser("a@a.com", "123456") { success, _ ->
@@ -128,7 +126,7 @@ class AuthViewModelTest {
     @Test
     fun `loginUser - erro`() {
         whenever(auth.signInWithEmailAndPassword(any(), any()))
-            .thenReturn(failureTask(Exception("Senha incorreta")))
+            .thenReturn(Tasks.forException(Exception("Senha incorreta")))
 
         var message: String? = null
         viewModel.loginUser("a@a.com", "123456") { _, msg ->
@@ -141,7 +139,7 @@ class AuthViewModelTest {
     @Test
     fun `resetPassword - envia email`() {
         whenever(auth.sendPasswordResetEmail(any()))
-            .thenReturn(successVoidTask())
+            .thenReturn(Tasks.forResult(null))
 
         var result = false
         viewModel.resetPassword("a@a.com") { success, _ ->
@@ -170,23 +168,4 @@ class AuthViewModelTest {
     }
 
 
-    private fun <T> successTask(result: T): com.google.android.gms.tasks.Task<T> {
-        val task = mock(com.google.android.gms.tasks.Task::class.java) as com.google.android.gms.tasks.Task<T>
-        whenever(task.isSuccessful).thenReturn(true)
-        whenever(task.result).thenReturn(result)
-        return task
-    }
-
-    private fun <T> failureTask(e: Exception): com.google.android.gms.tasks.Task<T> {
-        val task = mock(com.google.android.gms.tasks.Task::class.java) as com.google.android.gms.tasks.Task<T>
-        whenever(task.isSuccessful).thenReturn(false)
-        whenever(task.exception).thenReturn(e)
-        return task
-    }
-
-    private fun successVoidTask(): com.google.android.gms.tasks.Task<Void> {
-        val task = mock(com.google.android.gms.tasks.Task::class.java) as com.google.android.gms.tasks.Task<Void>
-        whenever(task.isSuccessful).thenReturn(true)
-        return task
-    }
 }
