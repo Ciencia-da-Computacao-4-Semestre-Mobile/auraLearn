@@ -45,8 +45,6 @@ fun SettingsScreenUI(
 
     val studyRemindersEnabled = remember { mutableStateOf(true) }
     val taskDeadlinesEnabled = remember { mutableStateOf(true) }
-    val achievementsUnlockedEnabled = remember { mutableStateOf(false) }
-    val dailySummaryEnabled = remember { mutableStateOf(false) }
 
     val appTheme = remember { mutableStateOf("Claro") }
 
@@ -173,8 +171,6 @@ fun SettingsScreenUI(
         ) {
             SettingSwitch("Lembretes de estudo", studyRemindersEnabled)
             SettingSwitch("Prazos de tarefas", taskDeadlinesEnabled)
-            SettingSwitch("Conquistas desbloqueadas", achievementsUnlockedEnabled)
-            SettingSwitch("Resumo diário", dailySummaryEnabled)
         }
 
         Spacer(modifier = Modifier.height(20.dp))

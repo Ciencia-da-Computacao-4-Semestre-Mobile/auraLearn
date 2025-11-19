@@ -148,8 +148,6 @@ object DataSource {
 
     val studyRemindersEnabled = mutableStateOf(true)
     val taskDeadlinesEnabled = mutableStateOf(true)
-    val achievementsUnlockedEnabled = mutableStateOf(true)
-    val dailySummaryEnabled = mutableStateOf(false)
     val appTheme = mutableStateOf("Claro")
 
     fun getTasksForSubject(subjectName: String): List<Task> {
