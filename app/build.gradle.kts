@@ -16,7 +16,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
+        buildConfigField("String", "OPENAI_KEY", "\"${project.properties["OPENAI_API_KEY"]}\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -41,6 +41,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
@@ -132,7 +133,6 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation(libs.firebase.ai)
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testImplementation("org.mockito:mockito-core:5.11.0")
@@ -155,4 +155,6 @@ dependencies {
     androidTestImplementation("com.google.android.gms:play-services-tasks:18.0.2")
     testImplementation("com.google.android.gms:play-services-tasks:18.0.2")
     testImplementation("org.robolectric:robolectric:4.11.1")
+    implementation("com.aallam.openai:openai-client:3.6.0")
+    implementation("io.ktor:ktor-client-okhttp:2.3.7")
 }

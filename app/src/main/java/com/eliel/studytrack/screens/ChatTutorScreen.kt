@@ -1,5 +1,6 @@
 package com.eliel.studytrack.screens
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -52,6 +53,7 @@ fun ChatTutorScreen(
             )
         }
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -60,7 +62,6 @@ fun ChatTutorScreen(
                 .padding(16.dp)
         ) {
 
-            // Lista de mensagens
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -73,6 +74,7 @@ fun ChatTutorScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+
                 if (messages.isEmpty()) {
                     item {
                         Box(
@@ -95,7 +97,8 @@ fun ChatTutorScreen(
                             contentAlignment = if (message.isUser) Alignment.CenterEnd else Alignment.CenterStart
                         ) {
                             Surface(
-                                color = if (message.isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                                color = if (message.isUser) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surface,
                                 shape = RoundedCornerShape(16.dp)
                             ) {
                                 Text(
@@ -108,6 +111,13 @@ fun ChatTutorScreen(
                                 )
                             }
                         }
+                    }
+                }
+
+
+                if (chatUiState is ChatTutorUiState.Loading) {
+                    item {
+                        TypingAnimation()
                     }
                 }
             }
@@ -135,7 +145,7 @@ fun ChatTutorScreen(
                             onClick = {
                                 if (userInput.text.isNotBlank()) {
                                     val question = userInput.text
-                                    messages = messages + ChatMessage(question, isUser = true)
+                                    messages = messages + ChatMessage(question, true)
                                     userInput = TextFieldValue("")
                                     chatViewModel.sendMessage(question)
                                 }
@@ -156,32 +166,46 @@ fun ChatTutorScreen(
             )
         }
 
-
         LaunchedEffect(chatUiState) {
             when (val state = chatUiState) {
-                is ChatTutorUiState.Loading -> {
-                    messages = messages + ChatMessage("Pensando...", isUser = false)
-                }
                 is ChatTutorUiState.Success -> {
-
-                    messages = messages.filterNot { it.text == "Pensando..." } +
-                            ChatMessage(state.answer, isUser = false)
+                    messages = messages + ChatMessage(state.answer, isUser = false)
                 }
                 is ChatTutorUiState.Error -> {
-                    messages = messages.filterNot { it.text == "Pensando..." } +
-                            ChatMessage("Erro: ${state.error}", isUser = false)
+                    messages = messages + ChatMessage("Erro: ${state.error}", false)
                 }
                 else -> {}
             }
         }
 
 
-        LaunchedEffect(messages) {
-            if (messages.isNotEmpty()) {
-                coroutineScope.launch {
-                    listState.animateScrollToItem(messages.lastIndex)
-                }
+        LaunchedEffect(messages, chatUiState) {
+            coroutineScope.launch {
+                listState.animateScrollToItem(messages.size)
             }
         }
     }
+}
+
+@Composable
+fun TypingAnimation() {
+    val dots = remember { Animatable(0f) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            dots.animateTo(3f, animationSpec = tween(durationMillis = 900))
+            dots.snapTo(0f)
+        }
+    }
+
+    val dotCount = dots.value.toInt()
+
+    Text(
+        text = "Digitando" + ".".repeat(dotCount),
+        modifier = Modifier
+            .padding(8.dp)
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        color = MaterialTheme.colorScheme.onSurface
+    )
 }
