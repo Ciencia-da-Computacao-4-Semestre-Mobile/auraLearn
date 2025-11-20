@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.eliel.studytrack.screens.*
 import android.app.Activity
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun StudyTrackNavHost(
@@ -14,14 +15,19 @@ fun StudyTrackNavHost(
     activity: Activity,
     modifier: Modifier = Modifier
 ) {
-    NavHost(navController = navController, startDestination = "login", modifier = modifier) {
+    val prefs = activity.getSharedPreferences("studytrack_prefs", android.content.Context.MODE_PRIVATE)
+    val rememberMe = prefs.getBoolean("remember_me", false)
+    val isLoggedIn = FirebaseAuth.getInstance().currentUser != null
+    val startDest = if (rememberMe && isLoggedIn) Screen.Home.route else "login"
+
+    NavHost(navController = navController, startDestination = startDest, modifier = modifier) {
 
         composable("login") {
-            LoginScreen(navController = navController, activity = activity) //
+            LoginScreen(navController = navController, activity = activity)
         }
 
         composable("register") {
-            RegisterScreen(navController = navController, activity = activity) //
+            RegisterScreen(navController = navController, activity = activity)
         }
         composable("forgot_password") {
             ForgotPasswordScreen(navController)

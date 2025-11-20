@@ -36,6 +36,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.ui.draw.clip
+import com.eliel.studytrack.data.StudyPlanViewModel
+import com.eliel.studytrack.data.StudyPlanUiState
+import com.eliel.studytrack.data.firestore.StudyPlan
 
 
 @Composable
@@ -100,7 +103,11 @@ fun ScheduleScreenUI(navController: NavHostController) {
             Tab(selected = selectedTabIndex == 1, onClick = { selectedTabIndex = 1 }) {
                 Text(text = "Matérias", modifier = Modifier.padding(8.dp))
             }
+            Tab(selected = selectedTabIndex == 2, onClick = { selectedTabIndex = 2 }) {
+                Text(text = "Plano de Estudos", modifier = Modifier.padding(8.dp))
+            }
         }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -132,6 +139,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
                     }
                 }
             )
+            2 -> StudyPlanContent()
         }
     }
 
@@ -716,6 +724,336 @@ fun ConfirmCompleteDialog(
         shape = RoundedCornerShape(16.dp)
     )
 }
+
+@Composable
+fun StudyPlanContent(
+    viewModel: StudyPlanViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    var showNewPlanDialog by remember { mutableStateOf(false) }
+    var openedPlan by remember { mutableStateOf<com.eliel.studytrack.data.firestore.StudyPlan?>(null) }
+    var showDeletePlanDialog by remember { mutableStateOf(false) }
+    var planIdToDelete by remember { mutableStateOf<String?>(null) }
+    val scaffoldPadding = 0.dp
+
+    Column(Modifier.fillMaxSize().padding(scaffoldPadding)) {
+
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Planos de Estudo", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Button(
+                onClick = { showNewPlanDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Novo Plano", tint = MaterialTheme.colorScheme.onPrimary)
+                Spacer(Modifier.width(8.dp))
+                Text("Novo Plano", color = MaterialTheme.colorScheme.onPrimary)
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        when (uiState) {
+            is StudyPlanUiState.Loading -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            is StudyPlanUiState.Generating -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(Modifier.height(12.dp))
+                        Text(text = (uiState as StudyPlanUiState.Generating).message)
+                    }
+                }
+            }
+            is StudyPlanUiState.Error -> {
+                Text((uiState as StudyPlanUiState.Error).message, color = MaterialTheme.colorScheme.error)
+            }
+            is StudyPlanUiState.SuccessPlans -> {
+                val plans = (uiState as StudyPlanUiState.SuccessPlans).plans
+                if (plans.isEmpty()) {
+                    Text("Nenhum plano criado", modifier = Modifier.padding(8.dp))
+                } else {
+                    LazyColumn {
+                        items(plans) { plan ->
+                            StudyPlanCard(
+                                plan = plan,
+                                onClick = { openedPlan = plan },
+                                onDelete = {
+                                    planIdToDelete = plan.id
+                                    showDeletePlanDialog = true
+                                }
+                            )
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                }
+            }
+            else -> {}
+        }
+    }
+
+    if (showNewPlanDialog) {
+        NewStudyPlanDialog(
+            onDismiss = { showNewPlanDialog = false },
+            onSave = { materia, tema, objetivo, dias, horas ->
+                showNewPlanDialog = false
+                viewModel.generateAndSavePlan(materia, tema, objetivo, dias, horas) { _ -> }
+            }
+        )
+    }
+
+    openedPlan?.let { plan ->
+        StudyPlanDetailDialog(
+            plan = plan,
+            onDismiss = { openedPlan = null },
+            onToggleDay = { dayIndex -> viewModel.toggleDayCompletion(plan, dayIndex) },
+            onConcludePlan = { viewModel.markPlanCompleted(plan) }
+        )
+    }
+
+    if (showDeletePlanDialog) {
+        ConfirmDeleteDialog(
+            title = "Excluir Plano",
+            message = "Tem certeza que deseja excluir este plano de estudos?",
+            onConfirm = {
+                planIdToDelete?.let { viewModel.deletePlan(it) }
+                showDeletePlanDialog = false
+                planIdToDelete = null
+            },
+            onDismiss = {
+                showDeletePlanDialog = false
+                planIdToDelete = null
+            }
+        )
+    }
+}
+@Composable
+fun StudyPlanDetailDialog(
+    plan: com.eliel.studytrack.data.firestore.StudyPlan,
+    onDismiss: () -> Unit,
+    onToggleDay: (Int) -> Unit,
+    onConcludePlan: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.9f)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(Modifier.padding(20.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(plan.title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text("${plan.materia} • ${plan.horasPorDia}h/dia", style = MaterialTheme.typography.bodySmall)
+                    }
+                    IconButton(onClick = onDismiss) {
+                        Icon(painterResource(id = R.drawable.ic_close), contentDescription = "Fechar")
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                val completedCount = plan.days.count { it.completed }
+                val allComplete = completedCount == plan.totalDays
+                Column(Modifier.fillMaxWidth()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Progresso: $completedCount / ${plan.totalDays} dias concluídos", modifier = Modifier.weight(1f))
+                        if (allComplete) {
+                            Text(
+                                text = "✓ Concluído",
+                                color = Color(0xFF4CAF50),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    LinearProgressIndicator(
+                        progress = completedCount / (plan.totalDays.coerceAtLeast(1)).toFloat(),
+                        modifier = Modifier.fillMaxWidth().height(8.dp),
+                        color = Color(0xFF4CAF50),
+                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                LazyColumn {
+                    items(plan.days) { day ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = day.completed,
+                                onCheckedChange = { onToggleDay(day.dayIndex) },
+                                colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50))
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                "Dia ${day.dayIndex}: ${day.text}",
+                                fontSize = 16.sp,
+                                lineHeight = 22.sp,
+                                softWrap = true,
+                                color = if (day.completed) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Divider(Modifier.padding(vertical = 6.dp))
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Fechar") }
+                    if (allComplete) {
+                        Button(
+                            onClick = onConcludePlan,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                        ) { Text("Concluir Plano") }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+@Composable
+fun StudyPlanItem(text: String) {
+    var checked by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp)
+    ) {
+        Row(
+            Modifier
+                .padding(12.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(checked = checked, onCheckedChange = { checked = it })
+            Spacer(Modifier.width(8.dp))
+            Text(text)
+        }
+    }
+}
+@Composable
+fun StudyPlanCard(
+    plan: com.eliel.studytrack.data.firestore.StudyPlan,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val completedCount = plan.days.count { it.completed }
+    val progress = completedCount / (plan.totalDays.coerceAtLeast(1)).toFloat()
+    val borderColor = if (progress >= 1f) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+    val backgroundColor = MaterialTheme.colorScheme.surface
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .border(2.dp, borderColor, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_book_open),
+                    contentDescription = null,
+                    tint = borderColor
+                )
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(plan.title, fontWeight = FontWeight.Bold)
+                    Text("${plan.materia} • ${plan.horasPorDia}h/dia", style = MaterialTheme.typography.bodySmall)
+                }
+                if (progress >= 1f) {
+                    Text(
+                        text = "✓ Concluído",
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(painterResource(id = R.drawable.ic_close), contentDescription = "Excluir", tint = MaterialTheme.colorScheme.error)
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = progress,
+                modifier = Modifier.fillMaxWidth().height(6.dp),
+                color = borderColor,
+                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text("$completedCount/${plan.totalDays} dias", style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+
+@Composable
+fun NewStudyPlanDialog(
+    onDismiss: () -> Unit,
+    onSave: (materia: String, tema: String, objetivo: String, dias: Int, horas: Int) -> Unit
+) {
+    var materia by remember { mutableStateOf("") }
+    var tema by remember { mutableStateOf("") }
+    var objetivo by remember { mutableStateOf("") }
+    var dias by remember { mutableStateOf("5") }
+    var horas by remember { mutableStateOf("1") }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(modifier = Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(16.dp)) {
+            Column(Modifier.padding(20.dp)) {
+                Text("Novo Plano de Estudos", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(Modifier.height(12.dp))
+
+                OutlinedTextField(value = materia, onValueChange = { materia = it }, label = { Text("Matéria") }, modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(value = tema, onValueChange = { tema = it }, label = { Text("Tema") }, modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(value = objetivo, onValueChange = { objetivo = it }, label = { Text("Objetivo") }, modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(value = dias, onValueChange = { dias = it }, label = { Text("Tempo (dias)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(value = horas, onValueChange = { horas = it }, label = { Text("Horas por dia") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Cancelar") }
+                    Button(onClick = {
+                        val diasInt = dias.toIntOrNull() ?: 1
+                        val horasInt = horas.toIntOrNull() ?: 1
+                        onSave(materia.trim(), tema.trim(), objetivo.trim(), diasInt, horasInt)
+                    }, modifier = Modifier.weight(1f)) {
+                        Text("Gerar e Salvar")
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

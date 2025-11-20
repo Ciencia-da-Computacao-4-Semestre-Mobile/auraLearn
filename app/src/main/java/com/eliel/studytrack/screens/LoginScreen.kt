@@ -34,14 +34,16 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
     var googleLoading by remember { mutableStateOf(false) }
+    var rememberMe by remember { mutableStateOf(true) }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     val googleClient = remember(activity) { GoogleAuthHelper.getClient(activity) }
 
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        googleLoading = false
-        if (result.resultCode == Activity.RESULT_OK) {
+        val googleSignInLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            googleLoading = false
+            if (result.resultCode == Activity.RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)
@@ -54,6 +56,10 @@ fun LoginScreen(
                 viewModel.signInWithGoogle(idToken) { success, msg ->
                     googleLoading = false
                     if (success) {
+                        context.getSharedPreferences("studytrack_prefs", android.content.Context.MODE_PRIVATE)
+                            .edit()
+                            .putBoolean("remember_me", rememberMe)
+                            .apply()
                         navController.navigate("home") {
                             popUpTo("login") { inclusive = true }
                         }
@@ -121,6 +127,12 @@ fun LoginScreen(
                     if (success) navController.navigate("home") {
                         popUpTo("login") { inclusive = true }
                     } else errorMessage = message
+                    if (success) {
+                        context.getSharedPreferences("studytrack_prefs", android.content.Context.MODE_PRIVATE)
+                            .edit()
+                            .putBoolean("remember_me", rememberMe)
+                            .apply()
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -135,6 +147,12 @@ fun LoginScreen(
         }
 
         Spacer(Modifier.height(16.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Checkbox(checked = rememberMe, onCheckedChange = { rememberMe = it })
+            Spacer(Modifier.width(8.dp))
+            Text("Lembrar de mim")
+        }
 
         OutlinedButton(
             onClick = {
