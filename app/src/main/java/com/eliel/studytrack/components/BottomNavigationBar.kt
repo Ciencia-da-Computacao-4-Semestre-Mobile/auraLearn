@@ -30,7 +30,7 @@ fun BottomNavigationBar(navController: NavController) {
         BottomNavItem(Screen.Home.route, "Início", iconVector = Icons.Filled.Home),
         BottomNavItem(Screen.Schedule.route, "Cronograma", iconRes = R.drawable.ic_schedule),
         BottomNavItem(Screen.Pomodoro.route, "Pomodoro", iconRes = R.drawable.ic_pomodoro),
-        BottomNavItem(Screen.Reports.route, "Relatórios", iconRes = R.drawable.ic_reports),
+        BottomNavItem(Screen.Reports.route, "Relatórios", iconRes = R.drawable.ic_chart),
         BottomNavItem(Screen.Settings.route, "Configurações", iconVector = Icons.Filled.Settings)
     )
 

@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,13 +82,13 @@ fun PomodoroScreenUI(navController: NavHostController) {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Pomodoro Timer",
+                    text = stringResource(R.string.pomodoro_timer),
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp,
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "Técnica de produtividade para estudos",
+                    text = stringResource(R.string.tecnica_de_produtividade_para_estudos),
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -118,13 +119,13 @@ fun PomodoroScreenUI(navController: NavHostController) {
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_book_open),
-                        contentDescription = "Tempo de Estudo",
+                        contentDescription = stringResource(R.string.tempo_de_estudo),
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Tempo de Estudo",
+                        text = stringResource(R.string.tempo_de_estudo),
                         fontSize = 16.sp,
                         color = Color.White,
                         fontWeight = FontWeight.Medium
@@ -175,15 +176,15 @@ fun PomodoroScreenUI(navController: NavHostController) {
                                     TimerState.PAUSED -> R.drawable.ic_play
                                 }
                             ),
-                            contentDescription = "Controle",
+                            contentDescription = stringResource(R.string.controle),
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = when (timerState) {
-                                TimerState.STOPPED -> "Iniciar"
-                                TimerState.RUNNING -> "Pausar"
-                                TimerState.PAUSED -> "Continuar"
+                                TimerState.STOPPED -> stringResource(R.string.iniciar)
+                                TimerState.RUNNING -> stringResource(R.string.pausar)
+                                TimerState.PAUSED -> stringResource(R.string.continuar)
                             },
                             fontWeight = FontWeight.Medium
                         )
@@ -203,11 +204,11 @@ fun PomodoroScreenUI(navController: NavHostController) {
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_reset),
-                            contentDescription = "Resetar",
+                            contentDescription = stringResource(R.string.resetar),
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Resetar", fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.resetar), fontWeight = FontWeight.Medium)
                     }
                 }
             }
@@ -223,13 +224,13 @@ fun PomodoroScreenUI(navController: NavHostController) {
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_book),
-                    contentDescription = "Selecionar Matéria",
+                    contentDescription = stringResource(R.string.selecionar_materia),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Selecionar Matéria",
+                    text = stringResource(R.string.selecionar_materia),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -245,7 +246,7 @@ fun PomodoroScreenUI(navController: NavHostController) {
                     value = selectedSubject,
                     onValueChange = {},
                     readOnly = true,
-                    placeholder = { Text("Escolha a matéria para estudar") },
+                    placeholder = { Text(stringResource(R.string.escolha_a_materia_para_estudar)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -291,13 +292,13 @@ fun PomodoroScreenUI(navController: NavHostController) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_trophy),
+                        painter = painterResource(id = R.drawable.ic_trophy_fill),
                         contentDescription = "Trophy",
                         tint = Color(0xFFFFC107)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Estatísticas da Sessão",
+                        text = stringResource(R.string.stats_session),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.onSurface
@@ -317,7 +318,7 @@ fun PomodoroScreenUI(navController: NavHostController) {
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Text("Pomodoros Concluídos", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.pomodoros_concluidos), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
@@ -326,7 +327,7 @@ fun PomodoroScreenUI(navController: NavHostController) {
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Text("Tempo focado hoje", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.tempo_focado_hoje), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -342,16 +343,16 @@ fun PomodoroScreenUI(navController: NavHostController) {
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Dicas para uma sessão produtiva:",
+                    text = stringResource(R.string.dicas_para_uma_sess_o_produtiva),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("• Elimine distrações (celular, redes sociais)", fontSize = 14.sp)
-                Text("• Mantenha água por perto", fontSize = 14.sp)
-                Text("• Nas pausas, levante-se e movimente-se", fontSize = 14.sp)
-                Text("• A cada 4 pomodoros, faça uma pausa mais longa", fontSize = 14.sp)
+                Text(stringResource(R.string.elimine_distracoes_celular_redes_sociais), fontSize = 14.sp)
+                Text(stringResource(R.string.mantenha_agua_por_perto), fontSize = 14.sp)
+                Text(stringResource(R.string.nas_pausas_levante_se_e_movimente_se), fontSize = 14.sp)
+                Text(stringResource(R.string.a_cada_4_pomodoros_faca_uma_pausa_mais_longa), fontSize = 14.sp)
             }
         }
     }

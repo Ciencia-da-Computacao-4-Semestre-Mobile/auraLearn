@@ -24,6 +24,7 @@ import com.eliel.studytrack.data.Subject
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ReportsScreenUI(navController: NavHostController) {
@@ -33,8 +34,8 @@ fun ReportsScreenUI(navController: NavHostController) {
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        Text(text = "Relatórios", fontWeight = FontWeight.Bold, fontSize = 24.sp, color = MaterialTheme.colorScheme.onBackground)
-        Text(text = "Acompanhe seu progresso nos estudos", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = stringResource(R.string.relatorios), fontWeight = FontWeight.Bold, fontSize = 24.sp, color = MaterialTheme.colorScheme.onBackground)
+        Text(text = stringResource(R.string.acompanhe_seu_progresso_nos_estudos), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -43,18 +44,18 @@ fun ReportsScreenUI(navController: NavHostController) {
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     ReportStatCard(
-                        title = "Tarefas Concluídas",
+                        title = stringResource(R.string.tarefas_concluidas),
                         value = DataSource.totalCompletedTasks.value.toString(),
-                        period = "Esta semana",
+                        period = stringResource(R.string.esta_semana),
                         icon = R.drawable.ic_check_circle,
                         iconColor = Color(0xFF6200EE),
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     ReportStatCard(
-                        title = "Horas Estudadas",
+                        title = stringResource(R.string.horas_estudadas),
                         value = "${DataSource.totalStudyTime.value}h",
-                        period = "Esta semana",
+                        period = stringResource(R.string.esta_semana),
                         icon = R.drawable.ic_time,
                         iconColor = Color(0xFF9C27B0),
                         modifier = Modifier.weight(1f)
@@ -63,9 +64,9 @@ fun ReportsScreenUI(navController: NavHostController) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     ReportStatCard(
-                        title = "Sessões de Estudo",
+                        title = stringResource(R.string.sessoes_de_estudo),
                         value = DataSource.totalStudySessions.value.toString(),
-                        period = "Esta semana",
+                        period = stringResource(R.string.esta_semana),
                         icon = R.drawable.ic_book_open,
                         iconColor = Color(0xFFFF5722),
                         modifier = Modifier.weight(1f)
@@ -74,7 +75,7 @@ fun ReportsScreenUI(navController: NavHostController) {
                     ReportStatCard(
                         title = "Média por Sessão",
                         value = "${DataSource.dailyGoalAverage.value}min",
-                        period = "Esta semana",
+                        period = stringResource(R.string.esta_semana),
                         icon = R.drawable.ic_chart,
                         iconColor = Color(0xFF00C853),
                         modifier = Modifier.weight(1f)
@@ -83,7 +84,7 @@ fun ReportsScreenUI(navController: NavHostController) {
                 Spacer(modifier = Modifier.height(24.dp))
 
 
-                Text(text = "Progresso por Matéria", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onBackground)
+                Text(text = stringResource(R.string.progresso_por_materia), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(modifier = Modifier.height(16.dp))
                 DataSource.subjects.forEach { subject ->
                     SubjectProgressItem(subject = subject)
@@ -92,7 +93,7 @@ fun ReportsScreenUI(navController: NavHostController) {
                 Spacer(modifier = Modifier.height(24.dp))
 
 
-                Text(text = "Performance por Dia da Semana", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onBackground)
+                Text(text = stringResource(R.string.performance_por_dia_da_semana), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(modifier = Modifier.height(16.dp))
                 PerformanceByDayOfWeekContent()
                 Spacer(modifier = Modifier.height(24.dp))
@@ -144,7 +145,9 @@ fun SubjectProgressItem(subject: Subject) {
             Text(text = "Conclusão de Tarefas: ${subject.completionPercentage}%", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             LinearProgressIndicator(
                 progress = subject.completionPercentage / 100f,
-                modifier = Modifier.fillMaxWidth().height(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
             )
@@ -152,7 +155,9 @@ fun SubjectProgressItem(subject: Subject) {
             Text(text = "Progresso Geral: ${subject.generalProgressPercentage}%", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             LinearProgressIndicator(
                 progress = subject.generalProgressPercentage / 100f,
-                modifier = Modifier.fillMaxWidth().height(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp),
                 color = MaterialTheme.colorScheme.secondary,
                 trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
             )
@@ -163,13 +168,13 @@ fun SubjectProgressItem(subject: Subject) {
 @Composable
 fun PerformanceByDayOfWeekContent() {
     val performanceData = mapOf(
-        "Domingo" to Pair(0, 0),
-        "Segunda" to Pair(0, 0),
-        "Terça" to Pair(0, 0),
-        "Quarta" to Pair(0, 0),
-        "Quinta" to Pair(0, 0),
-        "Sexta" to Pair(0, 0),
-        "Sábado" to Pair(0, 0)
+        stringResource(R.string.domingo) to Pair(0, 0),
+        stringResource(R.string.segunda) to Pair(0, 0),
+        stringResource(R.string.terca) to Pair(0, 0),
+        stringResource(R.string.quarta) to Pair(0, 0),
+        stringResource(R.string.quinta) to Pair(0, 0),
+        stringResource(R.string.sexta) to Pair(0, 0),
+        stringResource(R.string.sabado) to Pair(0, 0)
     )
 
     Card(
@@ -183,7 +188,9 @@ fun PerformanceByDayOfWeekContent() {
                     Text(text = day, modifier = Modifier.weight(1f), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                     LinearProgressIndicator(
                         progress = 0.1f, // Placeholder progress
-                        modifier = Modifier.weight(2f).height(8.dp),
+                        modifier = Modifier
+                            .weight(2f)
+                            .height(8.dp),
                         color = MaterialTheme.colorScheme.tertiary,
                         trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                     )

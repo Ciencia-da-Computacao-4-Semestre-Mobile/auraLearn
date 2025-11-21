@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,7 +41,7 @@ fun ChatTutorScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chat Tutor") },
+                title = { Text(stringResource(R.string.ChatTutor)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -84,7 +85,7 @@ fun ChatTutorScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Como posso te ajudar?",
+                                text = stringResource(R.string.como_posso_te_ajudar),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.titleMedium
                             )
@@ -129,7 +130,7 @@ fun ChatTutorScreen(
                 value = userInput,
                 onValueChange = { userInput = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Digite sua pergunta...") },
+                placeholder = { Text(stringResource(R.string.digite_sua_pergunta)) },
                 trailingIcon = {
                     Box(
                         modifier = Modifier
