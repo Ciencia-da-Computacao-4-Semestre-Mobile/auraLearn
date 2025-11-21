@@ -168,15 +168,9 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_google_logo),
-                contentDescription = "Google",
-                modifier = Modifier.size(22.dp)
-            )
+            Image(painter = painterResource(id = R.drawable.ic_google), contentDescription = "Google")
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                if (googleLoading) "Carregando..." else "Cadastrar com Google"
-            )
+            Text(if (googleLoading) "Carregando..." else "Cadastrar com Google")
         }
 
         errorMessage?.let {

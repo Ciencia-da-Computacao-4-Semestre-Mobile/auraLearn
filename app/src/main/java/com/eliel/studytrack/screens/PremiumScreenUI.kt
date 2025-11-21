@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,19 +27,19 @@ fun PremiumScreenUI(navController: NavHostController) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Inscrição em Breve") },
-            text = { Text("Estamos trabalhando para trazer os melhores recursos para você. A opção de assinatura estará disponível em breve!") },
+            title = { Text(stringResource(R.string.inscricao_em_breve)) },
+            text = { Text(stringResource(R.string.assinatura_em_breve)) },
             confirmButton = {
                 Button(
                     onClick = { showDialog = false },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                 ) {
-                    Text("Entendido")
+                    Text(stringResource(R.string.entendido))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("Fechar")
+                    Text(stringResource(R.string.fechar))
                 }
             }
         )
@@ -62,7 +63,7 @@ fun PremiumScreenUI(navController: NavHostController) {
             }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_close),
-                    contentDescription = "Fechar",
+                    contentDescription = stringResource(R.string.fechar),
                     tint = Color.Gray,
                     modifier = Modifier.size(28.dp)
                 )
@@ -70,15 +71,15 @@ fun PremiumScreenUI(navController: NavHostController) {
         }
 
         Text(
-            text = "Assine o Premium",
+            text = stringResource(R.string.assine_o_premium),
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-        PremiumFeatureItem("Estatísticas detalhadas de estudo")
-        PremiumFeatureItem("Sincronização em múltiplos dispositivos")
-        PremiumFeatureItem("Temas exclusivos")
+        PremiumFeatureItem(stringResource(R.string.estatisticas_detalhadas_de_estudo))
+        PremiumFeatureItem(stringResource(R.string.sincronizacao_em_multiplos_dispositivos))
+        PremiumFeatureItem(stringResource(R.string.temas_exclusivos))
         Spacer(modifier = Modifier.height(24.dp))
         PlanCard(
             title = "Plano Mensal",
@@ -157,7 +158,7 @@ fun PlanCard(title: String, price: String, features: List<String>, onSubscribeCl
                 onClick = onSubscribeClick,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Assinar")
+                Text(stringResource(R.string.assinar))
             }
         }
     }

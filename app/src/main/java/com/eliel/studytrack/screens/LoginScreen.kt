@@ -39,11 +39,11 @@ fun LoginScreen(
 
     val googleClient = remember(activity) { GoogleAuthHelper.getClient(activity) }
 
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        googleLoading = false
-        if (result.resultCode == Activity.RESULT_OK) {
+        val googleSignInLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            googleLoading = false
+            if (result.resultCode == Activity.RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)
@@ -92,6 +92,7 @@ fun LoginScreen(
             modifier = Modifier.size(150.dp)
         )
         Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(16.dp))
         Text("Login", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(16.dp))
 
@@ -123,16 +124,14 @@ fun LoginScreen(
                 loading = true
                 viewModel.loginUser(email, password) { success, message ->
                     loading = false
+                    if (success) navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    } else errorMessage = message
                     if (success) {
-                        navController.navigate("home") {
-                            popUpTo("login") { inclusive = true }
-                        }
                         context.getSharedPreferences("studytrack_prefs", android.content.Context.MODE_PRIVATE)
                             .edit()
                             .putBoolean("remember_me", rememberMe)
                             .apply()
-                    } else {
-                        errorMessage = message
                     }
                 }
             },
@@ -142,7 +141,12 @@ fun LoginScreen(
             Text(if (loading) "Entrando..." else "Entrar")
         }
 
-        Spacer(Modifier.height(8.dp))
+        errorMessage?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
+
+        Spacer(Modifier.height(16.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Checkbox(checked = rememberMe, onCheckedChange = { rememberMe = it })
@@ -159,24 +163,16 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_google_logo),
-                contentDescription = "Google",
-                modifier = Modifier.size(22.dp)
-            )
+            Image(painter = painterResource(id = R.drawable.ic_google), contentDescription = "Google")
             Spacer(Modifier.width(8.dp))
             Text(if (googleLoading) "Carregando..." else "Entrar com Google")
         }
-
-        errorMessage?.let {
-            Spacer(Modifier.height(8.dp))
-            Text(it, color = MaterialTheme.colorScheme.error)
-        }
+        Spacer(Modifier.height(8.dp))
 
         TextButton(onClick = { navController.navigate("forgot_password") }) {
             Text("Esqueceu a senha?")
         }
-
+        Spacer(Modifier.height(16.dp))
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,

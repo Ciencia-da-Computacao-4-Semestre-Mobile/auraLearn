@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -134,14 +135,14 @@ fun HomeScreenUI(navController: NavHostController) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_task),
-                                    contentDescription = "Tarefas",
+                                    contentDescription = stringResource(R.string.tarefas),
                                     tint = Color.White.copy(alpha = 0.8f),
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        text = "Tarefas",
+                                        text = stringResource(R.string.tarefas),
                                         color = Color.White.copy(alpha = 0.8f),
                                         fontSize = 12.sp
                                     )
@@ -179,13 +180,13 @@ fun HomeScreenUI(navController: NavHostController) {
                     ) {
                         Column {
                             Text(
-                                text = "Progresso Geral",
+                                text = stringResource(R.string.progresso_geral),
                                 color = Color.White.copy(alpha = 0.8f),
                                 fontSize = 14.sp
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "21%",
+                                text = stringResource(R.string.VinteUm),
                                 color = Color.White,
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold
@@ -193,7 +194,7 @@ fun HomeScreenUI(navController: NavHostController) {
                         }
                         Icon(
                             painter = painterResource(id = R.drawable.ic_chart),
-                            contentDescription = "Progresso",
+                            contentDescription = stringResource(R.string.progresso),
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
                         )
@@ -214,13 +215,13 @@ fun HomeScreenUI(navController: NavHostController) {
                     ) {
                         Column {
                             Text(
-                                text = "Horas Estudadas",
+                                text = stringResource(R.string.horas_estudadas),
                                 color = Color.White.copy(alpha = 0.8f),
                                 fontSize = 14.sp
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "35.3h",
+                                text = stringResource(R.string.TrintaeCinco),
                                 color = Color.White,
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold
@@ -241,7 +242,7 @@ fun HomeScreenUI(navController: NavHostController) {
 
         item {
             Text(
-                text = "Ações Rápidas",
+                text = stringResource(R.string.Acoes_Rapidas),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -251,13 +252,13 @@ fun HomeScreenUI(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                QuickActionCard("Pomodoro", R.drawable.ic_timer, Color(0xFFEF4444), modifier = Modifier.weight(1f)) {
+                QuickActionCard(stringResource(R.string.pomodoro), R.drawable.ic_timer, Color(0xFFEF4444), modifier = Modifier.weight(1f)) {
                     navController.navigate(Screen.Pomodoro.route)
                 }
-                QuickActionCard("Cronograma", R.drawable.ic_calendar, Color(0xFF3B82F6), modifier = Modifier.weight(1f)) {
+                QuickActionCard(stringResource(R.string.cronograma), R.drawable.ic_calendar, Color(0xFF3B82F6), modifier = Modifier.weight(1f)) {
                     navController.navigate(Screen.Schedule.route)
                 }
-                QuickActionCard("Relatórios", R.drawable.ic_chart, Color(0xFF10B981), modifier = Modifier.weight(1f)) {
+                QuickActionCard(stringResource(R.string.relatorios), R.drawable.ic_chart, Color(0xFF10B981), modifier = Modifier.weight(1f)) {
                     navController.navigate(Screen.Reports.route)
                 }
             }
@@ -275,12 +276,12 @@ fun HomeScreenUI(navController: NavHostController) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painterResource(id = R.drawable.ic_calendar),
-                            contentDescription = "Próximas",
+                            contentDescription = stringResource(R.string.proximas),
                             tint = Color(0xFF3B82F6)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Próximas Tarefas",
+                            text = stringResource(R.string.proximas_tarefas),
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
                         )
@@ -290,13 +291,13 @@ fun HomeScreenUI(navController: NavHostController) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
                                 painterResource(id = R.drawable.ic_check_circle),
-                                contentDescription = "Check",
+                                contentDescription = stringResource(R.string.check),
                                 tint = Color(0xFF00C853),
                                 modifier = Modifier.size(48.dp)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Nenhuma tarefa pendente!", fontWeight = FontWeight.Bold)
-                            Text("Você está em dia com o cronograma 😉")
+                            Text(stringResource(R.string.nenhuma_tarefa_pendente), fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.voce_esta_em_dia_com_o_cronograma))
                         }
                     } else {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

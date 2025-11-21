@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import com.eliel.studytrack.data.StudyPlanViewModel
 import com.eliel.studytrack.data.StudyPlanUiState
 import com.eliel.studytrack.data.firestore.StudyPlan
@@ -72,7 +73,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Cronograma",
+                text = stringResource(R.string.cronograma),
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
                 color = MaterialTheme.colorScheme.onBackground
@@ -82,9 +83,9 @@ fun ScheduleScreenUI(navController: NavHostController) {
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Nova Tarefa", tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.nova_tarefa), tint = MaterialTheme.colorScheme.onPrimary)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(text = "Nova Tarefa", color = MaterialTheme.colorScheme.onPrimary)
+                Text(stringResource(R.string.nova_tarefa), color = MaterialTheme.colorScheme.onPrimary)
             }
         }
 
@@ -98,13 +99,13 @@ fun ScheduleScreenUI(navController: NavHostController) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Tab(selected = selectedTabIndex == 0, onClick = { selectedTabIndex = 0 }) {
-                Text(text = "Tarefas", modifier = Modifier.padding(8.dp))
+                Text(text = stringResource(R.string.tarefas), modifier = Modifier.padding(8.dp))
             }
             Tab(selected = selectedTabIndex == 1, onClick = { selectedTabIndex = 1 }) {
-                Text(text = "Matérias", modifier = Modifier.padding(8.dp))
+                Text(text = stringResource(R.string.materias), modifier = Modifier.padding(8.dp))
             }
             Tab(selected = selectedTabIndex == 2, onClick = { selectedTabIndex = 2 }) {
-                Text(text = "Plano de Estudos", modifier = Modifier.padding(8.dp))
+                Text(text = stringResource(R.string.plano_de_estudos), modifier = Modifier.padding(8.dp))
             }
         }
 
@@ -203,7 +204,7 @@ fun TasksContent(
                 value = selectedSubjectFilter,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Filtrar por") },
+                label = { Text(stringResource(R.string.filtrar_por)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -260,8 +261,8 @@ fun TasksContent(
 
     if (showDeleteDialog) {
         ConfirmDeleteDialog(
-            title = "Excluir Tarefa",
-            message = "Tem certeza que deseja excluir esta tarefa?",
+            title = stringResource(R.string.excluir_tarefa),
+            message = stringResource(R.string.tem_certeza_que_deseja_excluir_esta_tarefa),
             onConfirm = {
                 taskToDelete?.let { onDeleteTask(it) }
                 showDeleteDialog = false
@@ -355,11 +356,11 @@ fun TaskItem(task: TaskData, onComplete: () -> Unit, onDelete: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                     modifier = Modifier.padding(end = 8.dp)
                 ) {
-                    Text("Concluir", color = Color.White)
+                    Text(stringResource(R.string.concluir), color = Color.White)
                 }
             } else {
                 Text(
-                    text = "✓ Concluída",
+                    text = stringResource(R.string.concluida),
                     color = Color(0xFF4CAF50),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(end = 8.dp)
@@ -369,7 +370,7 @@ fun TaskItem(task: TaskData, onComplete: () -> Unit, onDelete: () -> Unit) {
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = "Excluir",
+                    contentDescription = stringResource(R.string.excluir),
                     tint = if (task.completed)
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     else
@@ -397,9 +398,9 @@ fun SubjectsContent(
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Nova Matéria", tint = MaterialTheme.colorScheme.onPrimary)
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.nova_materia), tint = MaterialTheme.colorScheme.onPrimary)
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Nova Matéria", color = MaterialTheme.colorScheme.onPrimary)
+            Text(text = stringResource(R.string.nova_materia), color = MaterialTheme.colorScheme.onPrimary)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -420,8 +421,8 @@ fun SubjectsContent(
 
     if (showDeleteDialog) {
         ConfirmDeleteDialog(
-            title = "Excluir Matéria",
-            message = "Tem certeza que deseja excluir esta matéria? Todas as tarefas relacionadas também serão afetadas.",
+            title = stringResource(R.string.excluir_materia),
+            message = stringResource(R.string.tem_certeza_que_deseja_excluir_esta_materia_todas_as_tarefas_relacionadas_tambem_ser_o_afetadas),
             onConfirm = {
                 subjectToDelete?.let { onDeleteSubject(it) }
                 showDeleteDialog = false
@@ -443,7 +444,9 @@ fun SubjectItem(subject: SubjectData, onDelete: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -458,7 +461,7 @@ fun SubjectItem(subject: SubjectData, onDelete: () -> Unit) {
                 Text(text = "Progresso: ${subject.currentWeeklyProgressHours}h", fontSize = 12.sp)
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Close, contentDescription = "Excluir matéria")
+                Icon(Icons.Default.Close, stringResource(R.string.excluir_materia))
             }
         }
     }
@@ -487,13 +490,13 @@ fun NewTaskDialog(
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Text("Nova Tarefa", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Text(stringResource(R.string.nova_tarefa), fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Título") },
+                    label = { Text(stringResource(R.string.titulo)) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -501,7 +504,7 @@ fun NewTaskDialog(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Descrição") },
+                    label = { Text(stringResource(R.string.descricao)) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -511,7 +514,7 @@ fun NewTaskDialog(
                         value = if (selectedSubject.isNotBlank()) selectedSubject else "Selecione uma matéria",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Matéria") },
+                        label = { Text(stringResource(R.string.materia)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -535,7 +538,7 @@ fun NewTaskDialog(
 
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Prioridade", fontWeight = FontWeight.Medium)
+                Text(stringResource(R.string.prioridade), fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(8.dp))
                 val priorities = listOf("BAIXA", "MEDIA", "ALTA")
 
@@ -587,7 +590,7 @@ fun NewTaskDialog(
                 OutlinedTextField(
                     value = dueDate,
                     onValueChange = {},
-                    label = { Text("Prazo") },
+                    label = { Text(stringResource(R.string.prazo)) },
                     readOnly = true,
                     modifier = Modifier.fillMaxWidth(),
                     interactionSource = remember { MutableInteractionSource() }
@@ -606,7 +609,7 @@ fun NewTaskDialog(
                 OutlinedTextField(
                     value = estimatedTime,
                     onValueChange = { estimatedTime = it },
-                    label = { Text("Tempo estimado (min)") },
+                    label = { Text(stringResource(R.string.tempo_estimado_min)) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -618,7 +621,7 @@ fun NewTaskDialog(
                     OutlinedButton(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
-                    ) { Text("Cancelar") }
+                    ) { Text(stringResource(R.string.cancelar)) }
 
                     Button(
                         onClick = {
@@ -637,7 +640,7 @@ fun NewTaskDialog(
                             }
                         },
                         modifier = Modifier.weight(1f)
-                    ) { Text("Salvar") }
+                    ) { Text(stringResource(R.string.salvar)) }
                 }
             }
         }
@@ -674,12 +677,12 @@ fun ConfirmDeleteDialog(
                     containerColor = MaterialTheme.colorScheme.error
                 )
             ) {
-                Text("Excluir")
+                Text(stringResource(R.string.excluir))
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(R.string.cancelar))
             }
         },
         shape = RoundedCornerShape(16.dp)
@@ -695,14 +698,14 @@ fun ConfirmCompleteDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Concluir Tarefa",
+                text = stringResource(R.string.concluir_tarefa),
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
         },
         text = {
             Text(
-                text = "Tem certeza que deseja marcar esta tarefa como concluída?",
+                text = stringResource(R.string.tem_certeza_que_deseja_marcar_esta_tarefa_como_concluida),
                 fontSize = 16.sp
             )
         },
@@ -713,12 +716,12 @@ fun ConfirmCompleteDialog(
                     containerColor = Color(0xFF4CAF50)
                 )
             ) {
-                Text("Concluir")
+                Text(stringResource(R.string.concluir))
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(R.string.cancelar))
             }
         },
         shape = RoundedCornerShape(16.dp)
@@ -736,22 +739,24 @@ fun StudyPlanContent(
     var planIdToDelete by remember { mutableStateOf<String?>(null) }
     val scaffoldPadding = 0.dp
 
-    Column(Modifier.fillMaxSize().padding(scaffoldPadding)) {
+    Column(Modifier
+        .fillMaxSize()
+        .padding(scaffoldPadding)) {
 
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Planos de Estudo", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Text(stringResource(R.string.planos_de_estudo), fontWeight = FontWeight.Bold, fontSize = 20.sp)
             Button(
                 onClick = { showNewPlanDialog = true },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Novo Plano", tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.novo_plano), tint = MaterialTheme.colorScheme.onPrimary)
                 Spacer(Modifier.width(8.dp))
-                Text("Novo Plano", color = MaterialTheme.colorScheme.onPrimary)
+                Text(stringResource(R.string.novo_plano), color = MaterialTheme.colorScheme.onPrimary)
             }
         }
 
@@ -778,7 +783,7 @@ fun StudyPlanContent(
             is StudyPlanUiState.SuccessPlans -> {
                 val plans = (uiState as StudyPlanUiState.SuccessPlans).plans
                 if (plans.isEmpty()) {
-                    Text("Nenhum plano criado", modifier = Modifier.padding(8.dp))
+                    Text(stringResource(R.string.nenhum_plano_criado), modifier = Modifier.padding(8.dp))
                 } else {
                     LazyColumn {
                         items(plans) { plan ->
@@ -820,8 +825,8 @@ fun StudyPlanContent(
 
     if (showDeletePlanDialog) {
         ConfirmDeleteDialog(
-            title = "Excluir Plano",
-            message = "Tem certeza que deseja excluir este plano de estudos?",
+            title = stringResource(R.string.excluir_plano),
+            message = stringResource(R.string.tem_certeza_que_deseja_excluir_este_plano_de_estudos),
             onConfirm = {
                 planIdToDelete?.let { viewModel.deletePlan(it) }
                 showDeletePlanDialog = false
@@ -860,7 +865,7 @@ fun StudyPlanDetailDialog(
                         Text("${plan.materia} • ${plan.horasPorDia}h/dia", style = MaterialTheme.typography.bodySmall)
                     }
                     IconButton(onClick = onDismiss) {
-                        Icon(painterResource(id = R.drawable.ic_close), contentDescription = "Fechar")
+                        Icon(painterResource(id = R.drawable.ic_close), contentDescription = stringResource(R.string.fechar))
                     }
                 }
 
@@ -873,7 +878,7 @@ fun StudyPlanDetailDialog(
                         Text("Progresso: $completedCount / ${plan.totalDays} dias concluídos", modifier = Modifier.weight(1f))
                         if (allComplete) {
                             Text(
-                                text = "✓ Concluído",
+                                text = stringResource(R.string.concluido),
                                 color = Color(0xFF4CAF50),
                                 fontWeight = FontWeight.Bold
                             )
@@ -882,7 +887,9 @@ fun StudyPlanDetailDialog(
                     Spacer(Modifier.height(6.dp))
                     LinearProgressIndicator(
                         progress = completedCount / (plan.totalDays.coerceAtLeast(1)).toFloat(),
-                        modifier = Modifier.fillMaxWidth().height(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp),
                         color = Color(0xFF4CAF50),
                         trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                     )
@@ -919,13 +926,13 @@ fun StudyPlanDetailDialog(
                 Spacer(Modifier.height(16.dp))
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Fechar") }
+                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.fechar)) }
                     if (allComplete) {
                         Button(
                             onClick = onConcludePlan,
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                        ) { Text("Concluir Plano") }
+                        ) { Text(stringResource(R.string.concluir_plano)) }
                     }
                 }
             }
@@ -988,19 +995,21 @@ fun StudyPlanCard(
                 }
                 if (progress >= 1f) {
                     Text(
-                        text = "✓ Concluído",
+                        text = stringResource(R.string.concluido),
                         color = Color(0xFF4CAF50),
                         fontWeight = FontWeight.Bold
                     )
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(painterResource(id = R.drawable.ic_close), contentDescription = "Excluir", tint = MaterialTheme.colorScheme.error)
+                    Icon(painterResource(id = R.drawable.ic_close), contentDescription = stringResource(R.string.excluir), tint = MaterialTheme.colorScheme.error)
                 }
             }
             Spacer(Modifier.height(8.dp))
             LinearProgressIndicator(
                 progress = progress,
-                modifier = Modifier.fillMaxWidth().height(6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp),
                 color = borderColor,
                 trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
             )
@@ -1023,30 +1032,32 @@ fun NewStudyPlanDialog(
     var horas by remember { mutableStateOf("1") }
 
     Dialog(onDismissRequest = onDismiss) {
-        Card(modifier = Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(16.dp)) {
+        Card(modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp), shape = RoundedCornerShape(16.dp)) {
             Column(Modifier.padding(20.dp)) {
-                Text("Novo Plano de Estudos", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(stringResource(R.string.novo_plano_de_estudos), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(12.dp))
 
-                OutlinedTextField(value = materia, onValueChange = { materia = it }, label = { Text("Matéria") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = materia, onValueChange = { materia = it }, label = { Text(stringResource(R.string.materia)) }, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = tema, onValueChange = { tema = it }, label = { Text("Tema") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = tema, onValueChange = { tema = it }, label = { Text(stringResource(R.string.tema)) }, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = objetivo, onValueChange = { objetivo = it }, label = { Text("Objetivo") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = objetivo, onValueChange = { objetivo = it }, label = { Text(stringResource(R.string.objetivo)) }, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = dias, onValueChange = { dias = it }, label = { Text("Tempo (dias)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                OutlinedTextField(value = dias, onValueChange = { dias = it }, label = { Text(stringResource(R.string.tempo_dias)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = horas, onValueChange = { horas = it }, label = { Text("Horas por dia") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                OutlinedTextField(value = horas, onValueChange = { horas = it }, label = { Text(stringResource(R.string.horas_por_dia)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
 
                 Spacer(Modifier.height(16.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Cancelar") }
+                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.cancelar)) }
                     Button(onClick = {
                         val diasInt = dias.toIntOrNull() ?: 1
                         val horasInt = horas.toIntOrNull() ?: 1
                         onSave(materia.trim(), tema.trim(), objetivo.trim(), diasInt, horasInt)
                     }, modifier = Modifier.weight(1f)) {
-                        Text("Gerar e Salvar")
+                        Text(stringResource(R.string.gerar_e_salvar))
                     }
                 }
             }
@@ -1077,15 +1088,17 @@ fun NewSubjectDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Text("Nova Matéria", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Text(stringResource(R.string.nova_materia), fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome da matéria") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.nome_da_materia)) }, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Cor", fontWeight = FontWeight.Medium)
+                Text(stringResource(R.string.cor), fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(colors) { color ->
@@ -1106,13 +1119,13 @@ fun NewSubjectDialog(
                 OutlinedTextField(
                     value = weeklyGoal,
                     onValueChange = { weeklyGoal = it },
-                    label = { Text("Meta semanal (h)") },
+                    label = { Text(stringResource(R.string.meta_semanal_h)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Cancelar") }
+                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.cancelar)) }
                     Button(
                         onClick = {
                             if (name.isNotBlank()) {
@@ -1127,7 +1140,7 @@ fun NewSubjectDialog(
                             }
                         },
                         modifier = Modifier.weight(1f)
-                    ) { Text("Salvar") }
+                    ) { Text(stringResource(R.string.salvar)) }
                 }
             }
         }

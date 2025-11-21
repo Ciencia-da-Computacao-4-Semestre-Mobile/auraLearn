@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,13 +38,13 @@ fun ForgotPasswordScreen(
             modifier = Modifier.size(150.dp)
         )
         Spacer(Modifier.height(16.dp))
-        Text("Recuperar senha", style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.recuperar_senha), style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(16.dp))
 
         TextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Digite seu email") },
+            label = { Text(stringResource(R.string.digite_seu_email)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
@@ -62,19 +63,19 @@ fun ForgotPasswordScreen(
             modifier = Modifier.fillMaxWidth(),
             enabled = !loading
         ) {
-            Text(if (loading) "Enviando..." else "Enviar link de redefinição")
+            Text(if (loading) stringResource(R.string.enviando) else stringResource(R.string.enviar_link_de_redefini_o))
         }
 
         Spacer(Modifier.height(16.dp))
 
         message?.let {
-            Text(it, color = if (it.contains("enviado", ignoreCase = true)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+            Text(it, color = if (it.contains(stringResource(R.string.enviado), ignoreCase = true)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
         }
 
         Spacer(Modifier.height(24.dp))
 
         TextButton(onClick = { navController.popBackStack() }) {
-            Text("Voltar para o login")
+            Text(stringResource(R.string.voltar_para_o_login))
         }
     }
 }
