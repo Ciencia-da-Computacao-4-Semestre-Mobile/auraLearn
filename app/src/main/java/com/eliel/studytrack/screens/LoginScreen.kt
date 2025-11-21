@@ -142,9 +142,7 @@ fun LoginScreen(
             Text(if (loading) "Entrando..." else "Entrar")
         }
 
-        Spacer(Modifier.height(16.dp))
-
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Checkbox(checked = rememberMe, onCheckedChange = { rememberMe = it })
