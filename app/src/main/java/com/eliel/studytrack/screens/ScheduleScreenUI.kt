@@ -845,8 +845,8 @@ fun StudyPlanDetailDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.9f)
-                .padding(16.dp),
+                .fillMaxHeight(0.95f)
+                .padding(8.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(Modifier.padding(20.dp)) {
@@ -856,21 +856,42 @@ fun StudyPlanDetailDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(plan.title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text(plan.title, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                         Text("${plan.materia} • ${plan.horasPorDia}h/dia", style = MaterialTheme.typography.bodySmall)
                     }
                     IconButton(onClick = onDismiss) {
-                        Icon(painterResource(id = R.drawable.ic_close), contentDescription = "Fechar")
+                        Icon(painterResource(id = R.drawable.ic_close), contentDescription = "Fechar", tint = MaterialTheme.colorScheme.error)
                     }
                 }
 
                 Spacer(Modifier.height(12.dp))
 
+                val introText = if (plan.descricao.isNotBlank()) plan.descricao else plan.objetivo
+                var showDesc by remember { mutableStateOf(true) }
+                if (introText.isNotBlank()) {
+                    if (showDesc) {
+                        Text(
+                            introText,
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(onClick = { showDesc = !showDesc }, modifier = Modifier.fillMaxWidth()) {
+                        Text(if (showDesc) "Esconder objetivo" else "Mostrar objetivo")
+                    }
+                    Spacer(Modifier.height(12.dp))
+                }
+
                 val completedCount = plan.days.count { it.completed }
                 val allComplete = completedCount == plan.totalDays
                 Column(Modifier.fillMaxWidth()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Progresso: $completedCount / ${plan.totalDays} dias concluídos", modifier = Modifier.weight(1f))
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(painterResource(id = R.drawable.ic_check_circle), contentDescription = null, tint = Color(0xFF4CAF50))
+                            Spacer(Modifier.width(8.dp))
+                            Text("$completedCount de ${plan.totalDays} dias", fontWeight = FontWeight.Medium)
+                        }
                         if (allComplete) {
                             Text(
                                 text = "✓ Concluído",
@@ -892,27 +913,47 @@ fun StudyPlanDetailDialog(
 
                 LazyColumn {
                     items(plan.days) { day ->
-                        Row(
-                            Modifier
+                        Card(
+                            modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(vertical = 6.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
-                            Checkbox(
-                                checked = day.completed,
-                                onCheckedChange = { onToggleDay(day.dayIndex) },
-                                colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50))
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text(
-                                "Dia ${day.dayIndex}: ${day.text}",
-                                fontSize = 16.sp,
-                                lineHeight = 22.sp,
-                                softWrap = true,
-                                color = if (day.completed) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurface
-                            )
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(
+                                    checked = day.completed,
+                                    onCheckedChange = { onToggleDay(day.dayIndex) },
+                                    colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50))
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(painterResource(id = R.drawable.ic_calendar), contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(
+                                            "Dia ${day.dayIndex}",
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 16.sp,
+                                            color = if (day.completed) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                    Spacer(Modifier.height(6.dp))
+                                    Text(
+                                        day.text,
+                                        fontSize = 15.sp,
+                                        lineHeight = 22.sp,
+                                        softWrap = true,
+                                        color = if (day.completed) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
                         }
-                        Divider(Modifier.padding(vertical = 6.dp))
                     }
                 }
 

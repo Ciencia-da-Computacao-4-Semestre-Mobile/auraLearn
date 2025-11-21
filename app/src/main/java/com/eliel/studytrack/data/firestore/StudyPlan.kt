@@ -15,6 +15,7 @@ data class StudyPlan(
     var materia: String = "",
     var tema: String = "",
     var objetivo: String = "",
+    var descricao: String = "",
     var days: List<StudyDay> = emptyList(),
     var totalDays: Int = 0,
     var horasPorDia: Int = 0,

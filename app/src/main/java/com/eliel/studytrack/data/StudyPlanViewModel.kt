@@ -103,6 +103,24 @@ class StudyPlanViewModel : ViewModel() {
                 val sanitized = raw.replace(Regex("[*_#`]+"), "")
                 val lines = sanitized.lines().map { it.trim() }.filter { it.isNotEmpty() }
 
+                val descPrompt = buildString {
+                    appendLine("Escreva um parágrafo de 2 a 3 linhas apresentando o plano gerado.")
+                    appendLine("Matéria: $materia")
+                    appendLine("Tema: $tema")
+                    appendLine("Objetivo: $objetivo")
+                    appendLine("Dias: $dias; Horas por dia: $horasPorDia")
+                    appendLine("Sem markdown, direto e motivador.")
+                }
+                val descReq = ChatCompletionRequest(
+                    model = ModelId("gpt-4o-mini"),
+                    messages = listOf(ChatMessage(role = ChatRole.User, content = descPrompt))
+                )
+                val descResp = openAi.chatCompletion(descReq)
+                val descricao = descResp.choices.firstOrNull()?.message?.content
+                    ?.replace(Regex("[*_#`]+"), "")
+                    ?.trim()
+                    ?: objetivo
+
                 val daysList = mutableListOf<StudyDay>()
                 var idx = 1
                 for (line in lines) {
@@ -124,6 +142,7 @@ class StudyPlanViewModel : ViewModel() {
                     materia = materia,
                     tema = tema,
                     objetivo = objetivo,
+                    descricao = descricao,
                     days = daysList,
                     totalDays = dias,
                     horasPorDia = horasPorDia
@@ -146,6 +165,7 @@ class StudyPlanViewModel : ViewModel() {
                     materia = materia,
                     tema = tema,
                     objetivo = objetivo,
+                    descricao = objetivo,
                     days = fallbackDays,
                     totalDays = dias,
                     horasPorDia = horasPorDia

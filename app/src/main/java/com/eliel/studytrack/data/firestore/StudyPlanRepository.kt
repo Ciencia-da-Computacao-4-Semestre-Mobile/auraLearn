@@ -39,7 +39,6 @@ suspend fun getPlansForCurrentUser(): List<StudyPlan> {
     val uid = userId() ?: return emptyList()
     val snapshot = db.collection(COLLECTION)
         .whereEqualTo("userId", uid)
-        // REMOVENDO O .orderBy("createdAt")
         .get().await()
     
     
