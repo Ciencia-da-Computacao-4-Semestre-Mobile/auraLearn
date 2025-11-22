@@ -23,6 +23,7 @@ import com.eliel.studytrack.auth.AuthViewModel
 import kotlinx.coroutines.launch
 import com.eliel.studytrack.ui.theme.ThemeController
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,8 +44,10 @@ fun SettingsScreenUI(
 
     val dailyStudyGoalSessions = remember { mutableStateOf(4) }
 
-    val studyRemindersEnabled = remember { mutableStateOf(true) }
-    val taskDeadlinesEnabled = remember { mutableStateOf(true) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("studytrack_prefs", android.content.Context.MODE_PRIVATE) }
+    val studyRemindersEnabled = remember { mutableStateOf(prefs.getBoolean("pref_study_reminders", true)) }
+    val taskDeadlinesEnabled = remember { mutableStateOf(prefs.getBoolean("pref_task_deadlines", true)) }
 
     val appTheme = remember { mutableStateOf("Claro") }
 
@@ -92,18 +95,18 @@ fun SettingsScreenUI(
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Text(
-                        userData?.name ?: "Usuário",
+                        userData?.name ?: stringResource(R.string.usuario),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        userData?.email ?: "email@exemplo.com",
+                        userData?.email ?: stringResource(R.string.email_exemplo_com),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
                     )
                     Text(
-                        "Plano: ${userData?.plan ?: "Gratuito"}",
+                        "Plano: ${userData?.plan ?: stringResource(R.string.gratuito)}",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
                     )
@@ -116,8 +119,8 @@ fun SettingsScreenUI(
 
         SectionCard(
             iconId = R.drawable.ic_timer,
-            iconTint = MaterialTheme.colorScheme.error, // destaque com cor de erro (ou primary se preferir)
-            title = "Timer Pomodoro"
+            iconTint = MaterialTheme.colorScheme.error,
+            title = stringResource(R.string.timer_pomodoro)
         ) {
             Column {
                 Row(
@@ -125,14 +128,14 @@ fun SettingsScreenUI(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     TimeDropdown(
-                        label = "Tempo de Estudo (min)",
+                        label = stringResource(R.string.tempo_de_estudo_min),
                         options = listOf(20, 25, 30, 35, 40),
                         value = pomodoroTime,
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     TimeDropdown(
-                        label = "Pausa Curta (min)",
+                        label = stringResource(R.string.pausa_curta_min),
                         options = listOf(5, 10, 15),
                         value = shortBreakTime,
                         modifier = Modifier.weight(1f)
@@ -144,14 +147,14 @@ fun SettingsScreenUI(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     TimeDropdown(
-                        label = "Pausa Longa (min)",
+                        label = stringResource(R.string.pausa_longa_min),
                         options = listOf(15, 20, 25, 30),
                         value = longBreakTime,
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     TimeDropdown(
-                        label = "Meta Diária (sessões)",
+                        label = stringResource(R.string.meta_diaria),
                         options = listOf(2, 4, 6, 8),
                         value = dailyStudyGoalSessions,
                         isSession = true,
@@ -164,13 +167,65 @@ fun SettingsScreenUI(
         Spacer(modifier = Modifier.height(20.dp))
 
 
-        SectionCard(
-            iconId = R.drawable.ic_notifications,
-            iconTint = MaterialTheme.colorScheme.primary,
-            title = "Notificações"
-        ) {
-            SettingSwitch("Lembretes de estudo", studyRemindersEnabled)
-            SettingSwitch("Prazos de tarefas", taskDeadlinesEnabled)
+    SectionCard(
+        iconId = R.drawable.ic_notifications,
+        iconTint = MaterialTheme.colorScheme.primary,
+        title = stringResource(R.string.notificacoes)
+    ) {
+        SettingSwitch(stringResource(R.string.lembretes_de_estudo), studyRemindersEnabled)
+        LaunchedEffect(studyRemindersEnabled.value) {
+            prefs.edit().putBoolean("pref_study_reminders", studyRemindersEnabled.value).apply()
+            if (!studyRemindersEnabled.value) {
+                com.eliel.studytrack.notifications.ReminderScheduler.cancelDailyPlanReminder(context)
+            }
+            if (studyRemindersEnabled.value) {
+                if (android.os.Build.VERSION.SDK_INT >= 33) {
+                    val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                        context,
+                        android.Manifest.permission.POST_NOTIFICATIONS
+                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    if (!granted) {
+                        (context as? android.app.Activity)?.let { act ->
+                            androidx.core.app.ActivityCompat.requestPermissions(
+                                act,
+                                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                                1001
+                            )
+                        }
+                    }
+                }
+                scope.launch {
+                    try {
+                        val plans = com.eliel.studytrack.data.firestore.StudyPlanRepository.getPlansForCurrentUser()
+                        com.eliel.studytrack.notifications.ReminderScheduler.scheduleDailyPlanReminder(
+                            context,
+                            plans.filter { plan -> plan.days.any { !it.completed } }.map { it.title }
+                        )
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+            SettingSwitch(stringResource(R.string.prazos_de_tarefas), taskDeadlinesEnabled)
+            LaunchedEffect(taskDeadlinesEnabled.value) {
+                prefs.edit().putBoolean("pref_task_deadlines", taskDeadlinesEnabled.value).apply()
+                if (taskDeadlinesEnabled.value) {
+                    if (android.os.Build.VERSION.SDK_INT >= 33) {
+                        val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.POST_NOTIFICATIONS
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                        if (!granted) {
+                            (context as? android.app.Activity)?.let { act ->
+                                androidx.core.app.ActivityCompat.requestPermissions(
+                                    act,
+                                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                                    1002
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -184,11 +239,11 @@ fun SettingsScreenUI(
         SectionCard(
             iconId = R.drawable.ic_info,
             iconTint = MaterialTheme.colorScheme.primary,
-            title = "Sobre o App"
+            title = stringResource(R.string.sobre_o_app)
         ) {
-            Text("Versão: 1.0.0", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
-            Text("Última atualização: 04/10/2025", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
-            Text("Desenvolvido por Eliel", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+            Text(stringResource(R.string.versao), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+            Text(stringResource(R.string.ultima_atualizacao), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+            Text(stringResource(R.string.desenvolvido_por_auralearn), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -209,7 +264,7 @@ fun SettingsScreenUI(
                 tint = Color.Black
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Assine o Premium", color = Color.Black, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.assine_o_premium), color = Color.Black, fontWeight = FontWeight.Bold)
         }
 
         OutlinedButton(
@@ -233,7 +288,7 @@ fun SettingsScreenUI(
                 tint = MaterialTheme.colorScheme.error
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Sair da Conta", color = MaterialTheme.colorScheme.error)
+            Text(stringResource(R.string.sair_da_conta), color = MaterialTheme.colorScheme.error)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -316,7 +371,9 @@ fun TimeDropdown(
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -359,7 +416,7 @@ fun AppearanceSection(appTheme: MutableState<String>) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Aparência",
+                    text = stringResource(R.string.aparencia),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -374,9 +431,9 @@ fun AppearanceSection(appTheme: MutableState<String>) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("Modo Escuro", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                    Text(stringResource(R.string.modo_escuro), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                     Text(
-                        "Interface escura para estudos noturnos",
+                        stringResource(R.string.interface_escura_para_estudos_noturnos),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )

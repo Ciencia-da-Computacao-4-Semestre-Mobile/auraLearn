@@ -51,6 +51,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
     var tasks by remember { mutableStateOf(listOf<TaskData>()) }
 
     val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current
 
     LaunchedEffect(Unit) {
         scope.launch {
@@ -118,6 +119,9 @@ fun ScheduleScreenUI(navController: NavHostController) {
                 subjects = subjects,
                 onToggleComplete = { task ->
                     scope.launch {
+                        if (!task.completed) {
+                            com.eliel.studytrack.notifications.ReminderScheduler.cancelTaskDeadlines(ctx, task.id)
+                        }
                         TaskRepository.updateTaskStatus(task.id, !task.completed)
                         tasks = TaskRepository.getTasks()
                     }
@@ -153,6 +157,10 @@ fun ScheduleScreenUI(navController: NavHostController) {
                     TaskRepository.addTask(task)
                     tasks = TaskRepository.getTasks()
                     showNewTaskDialog = false
+                    val prefs = ctx.getSharedPreferences("studytrack_prefs", android.content.Context.MODE_PRIVATE)
+                    if (prefs.getBoolean("pref_task_deadlines", true)) {
+                        com.eliel.studytrack.notifications.ReminderScheduler.scheduleTaskDeadlines(ctx, task)
+                    }
                 }
             }
         )
@@ -780,6 +788,14 @@ fun StudyPlanContent(
                 if (plans.isEmpty()) {
                     Text("Nenhum plano criado", modifier = Modifier.padding(8.dp))
                 } else {
+                    val ctx = LocalContext.current
+                    val prefs = ctx.getSharedPreferences("studytrack_prefs", android.content.Context.MODE_PRIVATE)
+                    if (prefs.getBoolean("pref_study_reminders", true)) {
+                        com.eliel.studytrack.notifications.ReminderScheduler.scheduleDailyPlanReminder(
+                            ctx,
+                            plans.filter { plan -> plan.days.any { !it.completed } }.map { it.title }
+                        )
+                    }
                     LazyColumn {
                         items(plans) { plan ->
                             StudyPlanCard(
