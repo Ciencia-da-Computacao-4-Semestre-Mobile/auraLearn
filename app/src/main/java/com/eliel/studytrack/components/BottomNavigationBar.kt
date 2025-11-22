@@ -13,6 +13,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.eliel.studytrack.R
 import com.eliel.studytrack.Screen
 
@@ -30,7 +31,7 @@ fun BottomNavigationBar(navController: NavController) {
         BottomNavItem(Screen.Home.route, "Início", iconVector = Icons.Filled.Home),
         BottomNavItem(Screen.Schedule.route, "Cronograma", iconRes = R.drawable.ic_schedule),
         BottomNavItem(Screen.Pomodoro.route, "Pomodoro", iconRes = R.drawable.ic_pomodoro),
-        BottomNavItem(Screen.Reports.route, "Relatórios", iconRes = R.drawable.ic_reports),
+        BottomNavItem(Screen.Reports.route, "Relatórios", iconRes = R.drawable.ic_chart),
         BottomNavItem(Screen.Settings.route, "Configurações", iconVector = Icons.Filled.Settings)
     )
 
@@ -68,12 +69,19 @@ fun BottomNavigationBar(navController: NavController) {
 
                 selected = selected,
                 onClick = {
-                    navController.navigate(item.route) {
-                        navController.graph.startDestinationRoute?.let { route ->
-                            popUpTo(route) { saveState = true }
+                    if (item.route == Screen.Home.route) {
+                        val popped = navController.popBackStack(Screen.Home.route, false)
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
+                    } else {
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 },
 

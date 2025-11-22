@@ -167,6 +167,7 @@ fun SettingsScreenUI(
         Spacer(modifier = Modifier.height(20.dp))
 
 
+<<<<<<< HEAD
     SectionCard(
         iconId = R.drawable.ic_notifications,
         iconTint = MaterialTheme.colorScheme.primary,
@@ -226,6 +227,15 @@ fun SettingsScreenUI(
                     }
                 }
             }
+=======
+        SectionCard(
+            iconId = R.drawable.ic_notifications,
+            iconTint = MaterialTheme.colorScheme.primary,
+            title = stringResource(R.string.notificacoes)
+        ) {
+            SettingSwitch(stringResource(R.string.lembretes_de_estudo), studyRemindersEnabled)
+            SettingSwitch(stringResource(R.string.prazos_de_tarefas), taskDeadlinesEnabled)
+>>>>>>> 7c7e751e6afc30cc0d58eedf573e11eff17cbdd6
         }
 
         Spacer(modifier = Modifier.height(20.dp))
