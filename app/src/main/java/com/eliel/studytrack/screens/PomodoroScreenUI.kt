@@ -46,12 +46,14 @@ fun PomodoroScreenUI(navController: NavHostController) {
     var subjects by remember { mutableStateOf(listOf<com.eliel.studytrack.data.firestore.SubjectData>()) }
     var selectedSubject by remember { mutableStateOf("Escolha a matéria para estudar") }
     var expanded by remember { mutableStateOf(false) }
+    var sessions by remember { mutableStateOf(listOf<PomodoroSessionData>()) }
 
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         scope.launch {
             subjects = SubjectRepository.getSubjects()
             selectedSubject = subjects.firstOrNull()?.name ?: selectedSubject
+            try { sessions = PomodoroRepository.getSessions() } catch (_: Exception) {}
         }
     }
 
@@ -78,6 +80,7 @@ fun PomodoroScreenUI(navController: NavHostController) {
                                 minutes = DataSource.pomodoroTime.value
                             )
                         )
+                        sessions = PomodoroRepository.getSessions()
                     } catch (_: Exception) {}
                 }
 
@@ -337,22 +340,21 @@ fun PomodoroScreenUI(navController: NavHostController) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
+                    fun isToday(ts: com.google.firebase.Timestamp): Boolean {
+                        val cal = java.util.Calendar.getInstance();
+                        val todayY = cal.get(java.util.Calendar.YEAR)
+                        val todayD = cal.get(java.util.Calendar.DAY_OF_YEAR)
+                        val c2 = java.util.Calendar.getInstance(); c2.time = ts.toDate()
+                        return todayY == c2.get(java.util.Calendar.YEAR) && todayD == c2.get(java.util.Calendar.DAY_OF_YEAR)
+                    }
+                    val todaySessions = sessions.filter { isToday(it.completedAt) }
+                    val todayMinutes = todaySessions.sumOf { it.minutes }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = DataSource.pomodorosCompleted.value.toString(),
-                            color = Color(0xFF00C853),
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(text = todaySessions.size.toString(), color = Color(0xFF00C853), fontSize = 24.sp, fontWeight = FontWeight.Bold)
                         Text(stringResource(R.string.pomodoros_concluidos), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = DataSource.focusedTimeToday.value,
-                            color = Color(0xFF00C853),
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(text = "${todayMinutes}min", color = Color(0xFF00C853), fontSize = 24.sp, fontWeight = FontWeight.Bold)
                         Text(stringResource(R.string.tempo_focado_hoje), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
