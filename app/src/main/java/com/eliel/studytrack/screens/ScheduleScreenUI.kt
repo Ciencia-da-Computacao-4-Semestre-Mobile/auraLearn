@@ -551,7 +551,7 @@ fun NewTaskDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 val priorities = listOf("BAIXA", "MEDIA", "ALTA")
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     priorities.forEach { priority ->
                         val color = when (priority) {
                             "BAIXA" -> Color(0xFF2196F3)
@@ -561,6 +561,7 @@ fun NewTaskDialog(
                         }
                         Box(
                             modifier = Modifier
+                                .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
                                 .border(
                                     width = if (selectedPriority == priority) 2.dp else 1.dp,
@@ -574,9 +575,10 @@ fun NewTaskDialog(
                                         Color.Transparent
                                 )
                                 .clickable { selectedPriority = priority }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(priority, color = color, fontWeight = FontWeight.Medium)
+                            Text(priority, color = color, fontWeight = FontWeight.Medium, fontSize = 12.sp, maxLines = 1, softWrap = false)
                         }
                     }
                 }

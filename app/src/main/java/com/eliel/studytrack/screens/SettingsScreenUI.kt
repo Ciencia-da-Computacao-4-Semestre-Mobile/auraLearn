@@ -120,46 +120,62 @@ fun SettingsScreenUI(
         SectionCard(
             iconId = R.drawable.ic_timer,
             iconTint = MaterialTheme.colorScheme.error,
-            title = stringResource(R.string.timer_pomodoro)
+            title = "Rotina Pomodoro",
+            subtitle = "Personalize seus tempos de estudo"
         ) {
-            Column {
-                Row(
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(0.dp)
                 ) {
-                    TimeDropdown(
-                        label = stringResource(R.string.tempo_de_estudo_min),
-                        options = listOf(20, 25, 30, 35, 40),
-                        value = pomodoroTime,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    TimeDropdown(
-                        label = stringResource(R.string.pausa_curta_min),
-                        options = listOf(5, 10, 15),
-                        value = shortBreakTime,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        TimeDropdown(
+                            label = "Tempo de estudo",
+                            options = listOf(20, 25, 30, 35, 40),
+                            value = pomodoroTime,
+                            modifier = Modifier.weight(1f),
+                            compact = true
+                        )
+                        TimeDropdown(
+                            label = "Pausa curta",
+                            options = listOf(5, 10, 15),
+                            value = shortBreakTime,
+                            modifier = Modifier.weight(1f),
+                            compact = true
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(0.dp)
                 ) {
-                    TimeDropdown(
-                        label = stringResource(R.string.pausa_longa_min),
-                        options = listOf(15, 20, 25, 30),
-                        value = longBreakTime,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    TimeDropdown(
-                        label = stringResource(R.string.meta_diaria),
-                        options = listOf(2, 4, 6, 8),
-                        value = dailyStudyGoalSessions,
-                        isSession = true,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        TimeDropdown(
+                            label = "Pausa longa",
+                            options = listOf(15, 20, 25, 30),
+                            value = longBreakTime,
+                            modifier = Modifier.weight(1f),
+                            compact = true
+                        )
+                        TimeDropdown(
+                            label = "Meta diária",
+                            options = listOf(2, 4, 6, 8),
+                            value = dailyStudyGoalSessions,
+                            isSession = true,
+                            modifier = Modifier.weight(1f),
+                            compact = true
+                        )
+                    }
                 }
             }
         }
@@ -302,6 +318,7 @@ fun SectionCard(
     iconId: Int,
     iconTint: androidx.compose.ui.graphics.Color,
     title: String,
+    subtitle: String? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
@@ -318,7 +335,13 @@ fun SectionCard(
                     tint = iconTint
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Column {
+                    Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    subtitle?.let {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(it, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f))
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(12.dp))
             content()
@@ -354,9 +377,12 @@ fun TimeDropdown(
     options: List<Int>,
     value: MutableState<Int>,
     modifier: Modifier = Modifier,
-    isSession: Boolean = false
+    isSession: Boolean = false,
+    compact: Boolean = false
 ) {
     var expanded by remember { mutableStateOf(false) }
+
+    val displayText = if (isSession) "${value.value} sessões" else "${value.value} min"
 
     Column(modifier = modifier) {
         Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -367,17 +393,18 @@ fun TimeDropdown(
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = if (isSession) "${value.value} sessões" else "${value.value} minutos",
+                value = displayText,
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
                     .menuAnchor()
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .then(if (compact) Modifier.height(56.dp) else Modifier),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                     focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
                     unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -385,7 +412,12 @@ fun TimeDropdown(
             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 options.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(if (isSession) "$option sessões" else "$option minutos", color = MaterialTheme.colorScheme.onSurface) },
+                        text = {
+                            Text(
+                                if (isSession) "$option sessões" else "$option min",
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        },
                         onClick = {
                             value.value = option
                             expanded = false
@@ -396,6 +428,7 @@ fun TimeDropdown(
         }
     }
 }
+
 
 @Composable
 fun AppearanceSection(appTheme: MutableState<String>) {
