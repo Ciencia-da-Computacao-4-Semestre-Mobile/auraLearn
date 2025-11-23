@@ -51,6 +51,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
     var tasks by remember { mutableStateOf(listOf<TaskData>()) }
 
     val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current
 
     LaunchedEffect(Unit) {
         scope.launch {
@@ -118,8 +119,15 @@ fun ScheduleScreenUI(navController: NavHostController) {
                 subjects = subjects,
                 onToggleComplete = { task ->
                     scope.launch {
-                        TaskRepository.updateTaskStatus(task.id, !task.completed)
+                        val newStatus = !task.completed
+                        TaskRepository.updateTaskStatus(task.id, newStatus)
                         tasks = TaskRepository.getTasks()
+                        val prefs = ctx.getSharedPreferences("studytrack_prefs", android.content.Context.MODE_PRIVATE)
+                        if (newStatus) {
+                            com.eliel.studytrack.notifications.ReminderScheduler.cancelTaskDeadlines(ctx, task.id)
+                        } else if (prefs.getBoolean("pref_task_deadlines", true)) {
+                            com.eliel.studytrack.notifications.ReminderScheduler.scheduleTaskDeadlines(ctx, task.copy(completed = false))
+                        }
                     }
                 },
                 onDeleteTask = { id ->
@@ -153,6 +161,10 @@ fun ScheduleScreenUI(navController: NavHostController) {
                     TaskRepository.addTask(task)
                     tasks = TaskRepository.getTasks()
                     showNewTaskDialog = false
+                    val prefs = ctx.getSharedPreferences("studytrack_prefs", android.content.Context.MODE_PRIVATE)
+                    if (prefs.getBoolean("pref_task_deadlines", true)) {
+                        com.eliel.studytrack.notifications.ReminderScheduler.scheduleTaskDeadlines(ctx, task)
+                    }
                 }
             }
         )
@@ -780,6 +792,14 @@ fun StudyPlanContent(
                 if (plans.isEmpty()) {
                     Text("Nenhum plano criado", modifier = Modifier.padding(8.dp))
                 } else {
+                    val ctx = LocalContext.current
+                    val prefs = ctx.getSharedPreferences("studytrack_prefs", android.content.Context.MODE_PRIVATE)
+                    if (prefs.getBoolean("pref_study_reminders", true)) {
+                        com.eliel.studytrack.notifications.ReminderScheduler.scheduleDailyPlanReminder(
+                            ctx,
+                            plans.filter { plan -> plan.days.any { !it.completed } }.map { it.title }
+                        )
+                    }
                     LazyColumn {
                         items(plans) { plan ->
                             StudyPlanCard(
@@ -849,7 +869,7 @@ fun StudyPlanDetailDialog(
                 .padding(8.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Column(Modifier.padding(20.dp)) {
+            Column(Modifier.padding(20.dp).fillMaxHeight()) {
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -859,8 +879,14 @@ fun StudyPlanDetailDialog(
                         Text(plan.title, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                         Text("${plan.materia} • ${plan.horasPorDia}h/dia", style = MaterialTheme.typography.bodySmall)
                     }
-                    IconButton(onClick = onDismiss) {
-                        Icon(painterResource(id = R.drawable.ic_close), contentDescription = "Fechar", tint = MaterialTheme.colorScheme.error)
+                    IconButton(
+                        onClick = onDismiss,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(painterResource(id = R.drawable.ic_close), contentDescription = "Fechar")
                     }
                 }
 
@@ -911,7 +937,7 @@ fun StudyPlanDetailDialog(
 
                 Spacer(Modifier.height(12.dp))
 
-                LazyColumn {
+                LazyColumn(Modifier.weight(1f)) {
                     items(plan.days) { day ->
                         Card(
                             modifier = Modifier
@@ -960,7 +986,18 @@ fun StudyPlanDetailDialog(
                 Spacer(Modifier.height(16.dp))
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Fechar") }
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    ) {
+                        Icon(painter = painterResource(id = R.drawable.ic_close), contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Fechar")
+                    }
                     if (allComplete) {
                         Button(
                             onClick = onConcludePlan,

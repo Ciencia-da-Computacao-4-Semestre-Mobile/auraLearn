@@ -5,7 +5,8 @@ import com.google.firebase.Timestamp
 data class StudyDay(
     var dayIndex: Int = 0,
     var text: String = "",
-    var completed: Boolean = false
+    var completed: Boolean = false,
+    var completedAt: Timestamp? = null
 )
 
 data class StudyPlan(

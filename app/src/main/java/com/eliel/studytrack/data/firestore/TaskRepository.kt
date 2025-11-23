@@ -3,6 +3,7 @@ package com.eliel.studytrack.data.firestore
 import android.annotation.SuppressLint
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.tasks.await
 
 data class TaskData(
@@ -13,7 +14,8 @@ data class TaskData(
     val dueDate: String = "",
     val estimatedTime: String = "",
     val priority: String = "MEDIA",
-    val completed: Boolean = false
+    val completed: Boolean = false,
+    val completedAt: Timestamp? = null
 )
 
 object TaskRepository {
@@ -35,7 +37,11 @@ object TaskRepository {
     }
 
     suspend fun updateTaskStatus(id: String, completed: Boolean) {
-        userTasks().document(id).update("completed", completed).await()
+        val updates = hashMapOf<String, Any?>(
+            "completed" to completed,
+            "completedAt" to if (completed) Timestamp.now() else null
+        )
+        userTasks().document(id).update(updates).await()
     }
 
     suspend fun deleteTask(id: String) {

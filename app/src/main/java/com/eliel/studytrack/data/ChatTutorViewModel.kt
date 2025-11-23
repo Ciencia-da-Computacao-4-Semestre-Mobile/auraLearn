@@ -42,7 +42,7 @@ class ChatTutorViewModel : ViewModel() {
                 """.trimIndent()
 
                 val request = ChatCompletionRequest(
-                    model = ModelId("gpt-4o-mini"),
+                    model = ModelId("gpt-4.1-mini"),
                     messages = listOf(
                         ChatMessage(
                             role = ChatRole.User,

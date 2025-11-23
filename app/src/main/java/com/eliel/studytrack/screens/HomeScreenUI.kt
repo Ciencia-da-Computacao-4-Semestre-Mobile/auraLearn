@@ -28,6 +28,11 @@ import com.eliel.studytrack.data.DataSource
 import com.eliel.studytrack.data.Task
 import com.eliel.studytrack.data.firestore.TaskData
 import com.eliel.studytrack.data.firestore.TaskRepository
+import com.eliel.studytrack.data.firestore.PomodoroRepository
+import com.eliel.studytrack.data.firestore.PomodoroSessionData
+import com.eliel.studytrack.data.firestore.StudyPlanRepository
+import com.eliel.studytrack.data.firestore.StudyPlan
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -36,10 +41,14 @@ import java.util.*
 fun HomeScreenUI(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     var tasks by remember { mutableStateOf<List<TaskData>>(emptyList()) }
+    var sessions by remember { mutableStateOf<List<PomodoroSessionData>>(emptyList()) }
+    var plans by remember { mutableStateOf<List<StudyPlan>>(emptyList()) }
 
     LaunchedEffect(Unit) {
         scope.launch {
             tasks = TaskRepository.getTasks()
+            try { sessions = PomodoroRepository.getSessions() } catch (_: Exception) {}
+            try { plans = StudyPlanRepository.getPlansForCurrentUser() } catch (_: Exception) {}
         }
     }
 
@@ -166,6 +175,60 @@ fun HomeScreenUI(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                fun parseEstimatedMinutes(s: String): Int {
+                    val t = s.trim().lowercase()
+                    return when {
+                        t.contains("h") -> {
+                            val parts = t.split("h")
+                            val h = parts.getOrNull(0)?.filter { it.isDigit() }?.toIntOrNull() ?: 0
+                            val m = parts.getOrNull(1)?.filter { it.isDigit() }?.toIntOrNull() ?: 0
+                            h * 60 + m
+                        }
+                        else -> t.filter { it.isDigit() }.toIntOrNull() ?: 0
+                    }
+                }
+                fun isInThisWeek(ts: Timestamp?): Boolean {
+                    if (ts == null) return false
+                    val cal = Calendar.getInstance()
+                    cal.firstDayOfWeek = Calendar.SUNDAY
+                    val start = cal.clone() as Calendar
+                    start.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+                    start.set(Calendar.HOUR_OF_DAY, 0)
+                    start.set(Calendar.MINUTE, 0)
+                    start.set(Calendar.SECOND, 0)
+                    start.set(Calendar.MILLISECOND, 0)
+                    val end = cal.clone() as Calendar
+                    end.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY)
+                    end.set(Calendar.HOUR_OF_DAY, 23)
+                    end.set(Calendar.MINUTE, 59)
+                    end.set(Calendar.SECOND, 59)
+                    end.set(Calendar.MILLISECOND, 999)
+                    val d = ts.toDate().time
+                    return d in start.timeInMillis..end.timeInMillis
+                }
+                fun parseDueDateToTimestamp(d: String): Timestamp? {
+                    return try {
+                        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                        val date = sdf.parse(d)
+                        if (date != null) Timestamp(date) else null
+                    } catch (_: Exception) { null }
+                }
+                val weeklySessions = sessions.filter { isInThisWeek(it.completedAt) }
+                val weeklyTaskMinutes = tasks.filter { it.completed }.sumOf { t ->
+                    val ts = t.completedAt ?: parseDueDateToTimestamp(t.dueDate)
+                    if (ts != null && isInThisWeek(ts)) parseEstimatedMinutes(t.estimatedTime) else 0
+                }
+                val weeklyPlanMinutes = plans.sumOf { plan ->
+                    val withDate = plan.days.filter { d -> d.completed && isInThisWeek(d.completedAt) }.count() * plan.horasPorDia * 60
+                    val withoutDate = plan.days.filter { d -> d.completed && d.completedAt == null }.count() * plan.horasPorDia * 60
+                    withDate + withoutDate
+                }
+                val totalMinutes = weeklySessions.sumOf { it.minutes } + weeklyTaskMinutes + weeklyPlanMinutes
+                val hoursStudiedText = String.format("%.1fh", totalMinutes / 60f)
+                val totalDays = plans.sumOf { it.totalDays }
+                val completedDays = plans.sumOf { it.days.count { d -> d.completed } }
+                val progressPercentText = if (totalDays > 0) "${((completedDays.toFloat() / totalDays.toFloat()) * 100).toInt()}%" else "0%"
+
                 Card(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(16.dp),
@@ -179,18 +242,9 @@ fun HomeScreenUI(navController: NavHostController) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text(
-                                text = stringResource(R.string.progresso_geral),
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 14.sp
-                            )
+                            Text(text = stringResource(R.string.progresso_geral), color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.VinteUm),
-                                color = Color.White,
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text(text = progressPercentText, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
                         }
                         Icon(
                             painter = painterResource(id = R.drawable.ic_chart),
@@ -214,18 +268,9 @@ fun HomeScreenUI(navController: NavHostController) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text(
-                                text = stringResource(R.string.horas_estudadas),
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 14.sp
-                            )
+                            Text(text = stringResource(R.string.horas_estudadas), color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.TrintaeCinco),
-                                color = Color.White,
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text(text = hoursStudiedText, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
                         }
                         Icon(
                             painter = painterResource(id = R.drawable.ic_book_open),

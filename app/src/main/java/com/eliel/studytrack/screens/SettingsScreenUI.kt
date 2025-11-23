@@ -44,8 +44,10 @@ fun SettingsScreenUI(
 
     val dailyStudyGoalSessions = remember { mutableStateOf(4) }
 
-    val studyRemindersEnabled = remember { mutableStateOf(true) }
-    val taskDeadlinesEnabled = remember { mutableStateOf(true) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("studytrack_prefs", android.content.Context.MODE_PRIVATE) }
+    val studyRemindersEnabled = remember { mutableStateOf(prefs.getBoolean("pref_study_reminders", true)) }
+    val taskDeadlinesEnabled = remember { mutableStateOf(prefs.getBoolean("pref_task_deadlines", true)) }
 
     val appTheme = remember { mutableStateOf("Claro") }
 
@@ -165,13 +167,65 @@ fun SettingsScreenUI(
         Spacer(modifier = Modifier.height(20.dp))
 
 
-        SectionCard(
-            iconId = R.drawable.ic_notifications,
-            iconTint = MaterialTheme.colorScheme.primary,
-            title = stringResource(R.string.notificacoes)
-        ) {
-            SettingSwitch(stringResource(R.string.lembretes_de_estudo), studyRemindersEnabled)
+    SectionCard(
+        iconId = R.drawable.ic_notifications,
+        iconTint = MaterialTheme.colorScheme.primary,
+        title = stringResource(R.string.notificacoes)
+    ) {
+        SettingSwitch(stringResource(R.string.lembretes_de_estudo), studyRemindersEnabled)
+        LaunchedEffect(studyRemindersEnabled.value) {
+            prefs.edit().putBoolean("pref_study_reminders", studyRemindersEnabled.value).apply()
+            if (!studyRemindersEnabled.value) {
+                com.eliel.studytrack.notifications.ReminderScheduler.cancelDailyPlanReminder(context)
+            }
+            if (studyRemindersEnabled.value) {
+                if (android.os.Build.VERSION.SDK_INT >= 33) {
+                    val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                        context,
+                        android.Manifest.permission.POST_NOTIFICATIONS
+                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    if (!granted) {
+                        (context as? android.app.Activity)?.let { act ->
+                            androidx.core.app.ActivityCompat.requestPermissions(
+                                act,
+                                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                                1001
+                            )
+                        }
+                    }
+                }
+                scope.launch {
+                    try {
+                        val plans = com.eliel.studytrack.data.firestore.StudyPlanRepository.getPlansForCurrentUser()
+                        com.eliel.studytrack.notifications.ReminderScheduler.scheduleDailyPlanReminder(
+                            context,
+                            plans.filter { plan -> plan.days.any { !it.completed } }.map { it.title }
+                        )
+                    } catch (_: Exception) {}
+                }
+            }
+        }
             SettingSwitch(stringResource(R.string.prazos_de_tarefas), taskDeadlinesEnabled)
+            LaunchedEffect(taskDeadlinesEnabled.value) {
+                prefs.edit().putBoolean("pref_task_deadlines", taskDeadlinesEnabled.value).apply()
+                if (taskDeadlinesEnabled.value) {
+                    if (android.os.Build.VERSION.SDK_INT >= 33) {
+                        val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.POST_NOTIFICATIONS
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                        if (!granted) {
+                            (context as? android.app.Activity)?.let { act ->
+                                androidx.core.app.ActivityCompat.requestPermissions(
+                                    act,
+                                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                                    1002
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))

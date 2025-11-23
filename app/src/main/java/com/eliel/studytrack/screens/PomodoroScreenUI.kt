@@ -19,6 +19,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.eliel.studytrack.R
 import com.eliel.studytrack.data.DataSource
+import com.eliel.studytrack.data.firestore.SubjectRepository
+import com.eliel.studytrack.data.firestore.PomodoroRepository
+import com.eliel.studytrack.data.firestore.PomodoroSessionData
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 enum class TimerState {
     STOPPED, RUNNING, PAUSED
@@ -39,9 +43,17 @@ fun PomodoroScreenUI(navController: NavHostController) {
     val longBreak by DataSource.longBreakTime
 
 
-    val subjects = DataSource.subjects
-    var selectedSubject by remember { mutableStateOf(subjects.firstOrNull()?.name ?: "Escolha a matéria para estudar") }
+    var subjects by remember { mutableStateOf(listOf<com.eliel.studytrack.data.firestore.SubjectData>()) }
+    var selectedSubject by remember { mutableStateOf("Escolha a matéria para estudar") }
     var expanded by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) {
+        scope.launch {
+            subjects = SubjectRepository.getSubjects()
+            selectedSubject = subjects.firstOrNull()?.name ?: selectedSubject
+        }
+    }
 
 
     LaunchedEffect(timerState) {
@@ -56,6 +68,18 @@ fun PomodoroScreenUI(navController: NavHostController) {
                 val currentFocusedTime = DataSource.focusedTimeToday.value
                 val minutes = currentFocusedTime.replace("min", "").toIntOrNull() ?: 0
                 DataSource.focusedTimeToday.value = "${minutes + DataSource.pomodoroTime.value}min"
+
+                val chosen = selectedSubject.takeIf { it.isNotBlank() && it != "Escolha a matéria para estudar" } ?: "Geral"
+                scope.launch {
+                    try {
+                        PomodoroRepository.addSession(
+                            PomodoroSessionData(
+                                subject = chosen,
+                                minutes = DataSource.pomodoroTime.value
+                            )
+                        )
+                    } catch (_: Exception) {}
+                }
 
                 timeRemaining = initialPomodoroTime
             }
@@ -248,7 +272,9 @@ fun PomodoroScreenUI(navController: NavHostController) {
                     readOnly = true,
                     placeholder = { Text(stringResource(R.string.escolha_a_materia_para_estudar)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
@@ -265,7 +291,7 @@ fun PomodoroScreenUI(navController: NavHostController) {
                                     Box(
                                         modifier = Modifier
                                             .size(12.dp)
-                                            .background(subject.color, CircleShape)
+                                            .background(Color(subject.color), CircleShape)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(subject.name)

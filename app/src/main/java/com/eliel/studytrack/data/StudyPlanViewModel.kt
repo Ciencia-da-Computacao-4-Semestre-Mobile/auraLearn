@@ -104,7 +104,7 @@ class StudyPlanViewModel : ViewModel() {
                 val lines = sanitized.lines().map { it.trim() }.filter { it.isNotEmpty() }
 
                 val descPrompt = buildString {
-                    appendLine("Escreva um parágrafo de 2 a 3 linhas apresentando o plano gerado.")
+                    appendLine("Escreva um parágrafo de 1 a 2 linhas apresentando o plano gerado.")
                     appendLine("Matéria: $materia")
                     appendLine("Tema: $tema")
                     appendLine("Objetivo: $objetivo")
@@ -182,7 +182,10 @@ class StudyPlanViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val newDays = plan.days.map {
-                    if (it.dayIndex == dayIndex) it.copy(completed = !it.completed) else it
+                    if (it.dayIndex == dayIndex) {
+                        val now = com.google.firebase.Timestamp.now()
+                        if (!it.completed) it.copy(completed = true, completedAt = now) else it.copy(completed = false, completedAt = null)
+                    } else it
                 }
                 val updated = plan.copy(days = newDays)
                 StudyPlanRepository.updatePlan(updated)
