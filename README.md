@@ -1,10 +1,6 @@
 🌟 AuraLearn — Seu Hub Inteligente de Estudos
 
-![Build](https://img.shields.io/badge/Gradle-Build-brightgreen?logo=gradle) !
-[Kotlin](https://img.shields.io/badge/Kotlin-1.9-blue?logo=kotlin) !
-[Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Enabled-5C6FFF?logo=android) !
-[Firebase](https://img.shields.io/badge/Firebase-Integrated-FFCA28?logo=firebase) !
-[OpenAI](https://img.shields.io/badge/OpenAI-Enabled-black?logo=openai)
+![Build](https://img.shields.io/badge/Gradle-Build-brightgreen?logo=gradle) ![Kotlin](https://img.shields.io/badge/Kotlin-1.9-blue?logo=kotlin) ![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Enabled-5C6FFF?logo=android) ![Firebase](https://img.shields.io/badge/Firebase-Integrated-FFCA28?logo=firebase) ![OpenAI](https://img.shields.io/badge/OpenAI-Enabled-black?logo=openai)
 
 AuraLearn é um aplicativo Android focado em produtividade, estudo assistido por IA e organização pessoal.
 Gerencie seu tempo, receba ajuda de um tutor inteligente e acompanhe sua evolução — tudo em um único lugar.
