@@ -101,8 +101,11 @@ Ou simplesmente use Run ▶ no Android Studio.
 app/
 
  ├── src/main/java/com/eliel/studytrack   # Código-fonte
+
  ├── src/main/res                         # Recursos do app
+
  ├── google-services.json                 # Configuração Firebase
+ 
 gradle/libs.versions.toml                 # Gerenciamento de dependências
 
 🔒 Segurança
