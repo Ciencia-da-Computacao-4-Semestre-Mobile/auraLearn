@@ -8,6 +8,10 @@ import androidx.navigation.compose.composable
 import com.eliel.studytrack.screens.*
 import android.app.Activity
 import com.google.firebase.auth.FirebaseAuth
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+
+
 
 @Composable
 fun StudyTrackNavHost(
@@ -39,5 +43,23 @@ fun StudyTrackNavHost(
         composable(Screen.Settings.route) { SettingsScreen(navController) }
         composable(Screen.ChatTutor.route) { ChatTutorScreen(navController) }
         composable(Screen.Premium.route) { PremiumScreen(navController) }
+        composable(
+            route = Screen.Review.route + "/{materia}/{tema}/{dayText}",
+            arguments = listOf(
+                navArgument("materia") { type = NavType.StringType },
+                navArgument("tema") { type = NavType.StringType },
+                navArgument("dayText") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val materia = backStackEntry.arguments?.getString("materia") ?: ""
+            val tema = backStackEntry.arguments?.getString("tema") ?: ""
+            val dayText = backStackEntry.arguments?.getString("dayText") ?: ""
+            ReviewScreen(
+                navController = navController,
+                materia = materia,
+                tema = tema,
+                dayText = dayText
+            )
+        }
     }
 }
