@@ -6,6 +6,7 @@ AuraLearn é um aplicativo Android focado em produtividade, estudo assistido por
 Gerencie seu tempo, receba ajuda de um tutor inteligente e acompanhe sua evolução — tudo em um único lugar.
 
 ✨ Principais Funcionalidades
+
 🔐 Autenticação
 
 Login com Google
@@ -49,6 +50,7 @@ Tema claro e tema escuro (Material 3)
 Interface moderna com animações
 
 🛠️ Tecnologias Utilizadas
+
 Área	Tecnologias
 Linguagem	Kotlin
 UI	Jetpack Compose, Material 3
@@ -57,7 +59,9 @@ Autenticação	Google Sign-In
 IA	OpenAI API (via com.aallam.openai)
 Arquitetura	ViewModel, StateFlow, Coroutines
 Outros	Navigation Compose, WorkManager
+
 ⚡ Instalação (Desenvolvimento Local)
+
 1. Clone o repositório
 git clone <REPO_URL>
 cd auraLearn
@@ -67,8 +71,8 @@ cd auraLearn
 File → Open → pasta do projeto
 
 🔥 Configuração
-Firebase
 
+Firebase
 
 Caso utilize outro projeto Firebase, substitua-o pelo seu.
 
@@ -84,6 +88,7 @@ E no app/build.gradle.kts:
 buildConfigField("String", "OPENAI_API_KEY", "\"${project.properties["OPENAI_API_KEY"]}\"")
 
 🚀 Build & Execução
+
 Via Gradle (Windows):
 ./gradlew.bat assembleDebug
 ./gradlew.bat installDebug
@@ -92,7 +97,9 @@ Via Gradle (Windows):
 Ou simplesmente use Run ▶ no Android Studio.
 
 📂 Estrutura do Projeto
+
 app/
+
  ├── src/main/java/com/eliel/studytrack   # Código-fonte
  ├── src/main/res                         # Recursos do app
  ├── google-services.json                 # Configuração Firebase
