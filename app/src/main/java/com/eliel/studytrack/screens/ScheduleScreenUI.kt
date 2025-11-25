@@ -147,7 +147,7 @@ fun ScheduleScreenUI(navController: NavHostController) {
                     }
                 }
             )
-            2 -> StudyPlanContent()
+            2 -> StudyPlanContent(navController = navController)
         }
     }
 
@@ -741,6 +741,7 @@ fun ConfirmCompleteDialog(
 
 @Composable
 fun StudyPlanContent(
+    navController: NavHostController,
     viewModel: StudyPlanViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -836,7 +837,15 @@ fun StudyPlanContent(
             plan = plan,
             onDismiss = { openedPlan = null },
             onToggleDay = { dayIndex -> viewModel.toggleDayCompletion(plan, dayIndex) },
-            onConcludePlan = { viewModel.markPlanCompleted(plan) }
+            onConcludePlan = { viewModel.markPlanCompleted(plan) },
+            onReview = { materia, tema, dayText ->
+                val encMateria = android.net.Uri.encode(materia)
+                val encTema = android.net.Uri.encode(tema)
+                val encDay = android.net.Uri.encode(dayText)
+                navController.navigate(
+                    com.eliel.studytrack.Screen.Review.route + "/" + encMateria + "/" + encTema + "/" + encDay
+                )
+            }
         )
     }
 
@@ -861,7 +870,8 @@ fun StudyPlanDetailDialog(
     plan: com.eliel.studytrack.data.firestore.StudyPlan,
     onDismiss: () -> Unit,
     onToggleDay: (Int) -> Unit,
-    onConcludePlan: () -> Unit
+    onConcludePlan: () -> Unit,
+    onReview: (materia: String, tema: String, dayText: String) -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -979,6 +989,11 @@ fun StudyPlanDetailDialog(
                                         softWrap = true,
                                         color = if (day.completed) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurface
                                     )
+                                    Spacer(Modifier.height(8.dp))
+                                    OutlinedButton(
+                                        onClick = { onReview(plan.materia, plan.tema, day.text) },
+                                        modifier = Modifier.align(Alignment.End)
+                                    ) { Text("Revisar") }
                                 }
                             }
                         }
