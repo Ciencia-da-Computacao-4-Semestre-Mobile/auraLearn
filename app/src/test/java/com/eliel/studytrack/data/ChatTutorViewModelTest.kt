@@ -5,6 +5,7 @@ import com.aallam.openai.api.chat.ChatCompletion
 import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.chat.ChatRole
 import com.aallam.openai.client.OpenAI
+import com.eliel.studytrack.data.ChatTutorViewModel.sendMessage
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,7 +38,7 @@ class ChatTutorViewModelTest {
         coEvery { mockClient.chatCompletion(any()) } returns fakeResponse
 
         // Act
-        viewModel.sendMessage("Qual é a capital da França?")
+        "Qual é a capital da França?".sendMessage()
 
         // Assert
         val state = viewModel.uiState.value
@@ -50,7 +51,7 @@ class ChatTutorViewModelTest {
         coEvery { mockClient.chatCompletion(any()) } throws RuntimeException("Falha na API")
 
         // Act
-        viewModel.sendMessage("Qual é a capital da França?")
+        "Qual é a capital da França?".sendMessage()
 
         // Assert
         val state = viewModel.uiState.value
@@ -67,7 +68,7 @@ class ChatTutorViewModelTest {
         coEvery { mockClient.chatCompletion(any()) } returns fakeResponse
 
         // Act
-        viewModel.sendMessage("Teste vazio")
+        "Teste vazio".sendMessage()
 
         // Assert
         val state = viewModel.uiState.value

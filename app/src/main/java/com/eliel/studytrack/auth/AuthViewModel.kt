@@ -7,7 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.launch
 
-class AuthViewModel : ViewModel() {
+open class AuthViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
 
@@ -139,4 +139,5 @@ class AuthViewModel : ViewModel() {
     }
 
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
+    open fun resetPassword(email: String, callback: (Boolean, String?) -> Unit) {}
 }

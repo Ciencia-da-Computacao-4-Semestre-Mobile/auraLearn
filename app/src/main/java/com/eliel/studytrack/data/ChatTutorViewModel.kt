@@ -1,5 +1,6 @@
 package com.eliel.studytrack.data
 
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aallam.openai.api.BetaOpenAI
@@ -16,7 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @OptIn(BetaOpenAI::class)
-class ChatTutorViewModel : ViewModel() {
+open class ChatTutorViewModel : ViewModel() {
 
     private val client = OpenAI(
         OpenAIConfig(
@@ -25,9 +26,9 @@ class ChatTutorViewModel : ViewModel() {
     )
 
     private val _uiState = MutableStateFlow<ChatTutorUiState>(ChatTutorUiState.Initial)
-    val uiState: StateFlow<ChatTutorUiState> = _uiState.asStateFlow()
+    open val uiState: MutableState<ChatTutorUiState> = _uiState.asStateFlow()
 
-    fun sendMessage(question: String) {
+    open fun String.sendMessage() {
         viewModelScope.launch {
 
             _uiState.value = ChatTutorUiState.Loading
@@ -38,7 +39,7 @@ class ChatTutorViewModel : ViewModel() {
                     Explique sempre de forma simples, objetiva e sem formatação (*, **, #).
                     Responda como se estivesse falando com um aluno.
                     
-                    Pergunta: $question
+                    Pergunta: ${this@sendMessage}
                 """.trimIndent()
 
                 val request = ChatCompletionRequest(
@@ -67,6 +68,8 @@ class ChatTutorViewModel : ViewModel() {
             }
         }
     }
+
+    open fun sendMessage(message: String) {}
 }
 
 sealed interface ChatTutorUiState {
@@ -74,4 +77,7 @@ sealed interface ChatTutorUiState {
     object Loading : ChatTutorUiState
     data class Success(val answer: String) : ChatTutorUiState
     data class Error(val error: String) : ChatTutorUiState
+    companion object {
+        val Idle: Any
+    }
 }

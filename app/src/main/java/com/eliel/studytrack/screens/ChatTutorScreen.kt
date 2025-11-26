@@ -17,10 +17,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import com.eliel.studytrack.R
 import com.eliel.studytrack.data.ChatTutorUiState
 import com.eliel.studytrack.data.ChatTutorViewModel
+import com.eliel.studytrack.data.ChatTutorViewModel.sendMessage
 import kotlinx.coroutines.launch
 
 data class ChatMessage(val text: String, val isUser: Boolean)
@@ -28,7 +28,7 @@ data class ChatMessage(val text: String, val isUser: Boolean)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatTutorScreen(
-    navController: NavHostController,
+    navController: com.eliel.studytrack.screens.FakeNavController,
     chatViewModel: ChatTutorViewModel = viewModel()
 ) {
     var userInput by remember { mutableStateOf(TextFieldValue("")) }
@@ -148,7 +148,7 @@ fun ChatTutorScreen(
                                     val question = userInput.text
                                     messages = messages + ChatMessage(question, true)
                                     userInput = TextFieldValue("")
-                                    chatViewModel.sendMessage(question)
+                                    question.sendMessage()
                                 }
                             },
                             enabled = userInput.text.isNotBlank(),

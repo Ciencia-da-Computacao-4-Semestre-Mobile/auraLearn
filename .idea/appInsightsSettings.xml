@@ -9,10 +9,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.eliel.studytrack" />
-                  <option name="mobileSdkAppId" value="1:806193610269:android:85bdbbbf59697edcf0d0f4" />
-                  <option name="projectId" value="auralearn-223d1" />
-                  <option name="projectNumber" value="806193610269" />
+                  <option name="appId" value="PLACEHOLDER" />
+                  <option name="mobileSdkAppId" value="" />
+                  <option name="projectId" value="" />
+                  <option name="projectNumber" value="" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
