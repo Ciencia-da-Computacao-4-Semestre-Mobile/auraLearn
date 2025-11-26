@@ -77,11 +77,9 @@ class ForgotPasswordScreenTest {
         }
 
         composeTestRule.onNodeWithText("Voltar para o login").performClick()
-        // Adicione verificações para navegação, se possível
     }
 }
 
-// Fake ViewModel para simular estados
 class FakeAuthViewModel(
     private val successMessage: String? = null,
     private val errorMessage: String? = null

@@ -34,7 +34,6 @@ class HomeScreenUITest {
         }
 
         composeTestRule.onNodeWithText("Pomodoro").performClick()
-        // Adicione verificações para navegação, se possível
     }
 
     @Test
@@ -44,7 +43,6 @@ class HomeScreenUITest {
         }
 
         composeTestRule.onNodeWithText("Cronograma").performClick()
-        // Adicione verificações para navegação, se possível
     }
 
     @Test
@@ -54,7 +52,6 @@ class HomeScreenUITest {
         }
 
         composeTestRule.onNodeWithText("Relatórios").performClick()
-        // Adicione verificações para navegação, se possível
     }
 
     @Test

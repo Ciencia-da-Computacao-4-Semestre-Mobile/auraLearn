@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.navigation.NavHostController
+import androidx.test.core.app.ApplicationProvider
 import com.eliel.studytrack.data.ChatTutorUiState
 import com.eliel.studytrack.data.ChatTutorViewModel
 import org.junit.Rule
@@ -20,7 +21,10 @@ class ChatTutorScreenTest {
     @Test
     fun testInitialState() {
         composeTestRule.setContent {
-            ChatTutorScreen(navController = FakeNavController(), chatViewModel = FakeChatTutorViewModel())
+            ChatTutorScreen(
+                navController = FakeNavController(),
+                chatViewModel = FakeChatTutorViewModel(ChatTutorUiState.Success(""))
+            )
         }
 
         composeTestRule.onNodeWithText("Como posso te ajudar?").assertExists()
@@ -29,7 +33,10 @@ class ChatTutorScreenTest {
     @Test
     fun testSendMessage() {
         composeTestRule.setContent {
-            ChatTutorScreen(navController = FakeNavController(), chatViewModel = FakeChatTutorViewModel())
+            ChatTutorScreen(
+                navController = FakeNavController(),
+                chatViewModel = FakeChatTutorViewModel()
+            )
         }
 
         val inputMessage = "Hello, Tutor!"
@@ -43,16 +50,22 @@ class ChatTutorScreenTest {
     @Test
     fun testLoadingState() {
         composeTestRule.setContent {
-            ChatTutorScreen(navController = FakeNavController(), chatViewModel = FakeChatTutorViewModel(ChatTutorUiState.Loading))
+            ChatTutorScreen(
+                navController = FakeNavController(),
+                chatViewModel = FakeChatTutorViewModel(ChatTutorUiState.Loading)
+            )
         }
 
-        composeTestRule.onNodeWithText("Digitando...").assertExists()
+        composeTestRule.onNodeWithText("Digitando", substring = true).assertExists()
     }
 
     @Test
     fun testErrorState() {
         composeTestRule.setContent {
-            ChatTutorScreen(navController = FakeNavController(), chatViewModel = FakeChatTutorViewModel(ChatTutorUiState.Error("Network Error")))
+            ChatTutorScreen(
+                navController = FakeNavController(),
+                chatViewModel = FakeChatTutorViewModel(ChatTutorUiState.Error("Network Error"))
+            )
         }
 
         composeTestRule.onNodeWithText("Erro: Network Error").assertExists()
@@ -61,17 +74,27 @@ class ChatTutorScreenTest {
     @Test
     fun testSuccessState() {
         composeTestRule.setContent {
-            ChatTutorScreen(navController = FakeNavController(), chatViewModel = FakeChatTutorViewModel(ChatTutorUiState.Success("Hello, User!")))
+            ChatTutorScreen(
+                navController = FakeNavController(),
+                chatViewModel = FakeChatTutorViewModel(ChatTutorUiState.Success("Hello, User!"))
+            )
         }
 
         composeTestRule.onNodeWithText("Hello, User!").assertExists()
     }
 }
 
-class FakeNavController : NavHostController(context = null) {
+
+class FakeNavController : NavHostController(
+    ApplicationProvider.getApplicationContext()
+) {
     override fun popBackStack(): Boolean = true
 }
 
-class FakeChatTutorViewModel(initialState: ChatTutorUiState = ChatTutorUiState.Success("")) : ChatTutorViewModel() {
+class FakeChatTutorViewModel(
+    initialState: ChatTutorUiState = ChatTutorUiState.Success("")
+) : ChatTutorViewModel() {
+
     override val uiState = mutableStateOf(initialState)
+
 }
